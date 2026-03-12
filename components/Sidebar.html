@@ -1,0 +1,41 @@
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <span class="logo-icon">☕</span>
+    <div class="logo-name" id="sidebarShopName">Brew POS</div>
+    <div class="logo-sub">POINT OF SALE</div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a href="?page=home" class="nav-item <?= page === 'home' ? 'active' : '' ?>">
+      <span class="nav-icon">🏠</span> Kasir
+    </a>
+    <a href="?page=analytics" class="nav-item <?= page === 'analytics' ? 'active' : '' ?>">
+      <span class="nav-icon">📊</span> Analitik
+    </a>
+    <a href="?page=menu" class="nav-item <?= page === 'menu' ? 'active' : '' ?>">
+      <span class="nav-icon">🍽️</span> Menu
+    </a>
+    <a href="?page=settings" class="nav-item <?= page === 'settings' ? 'active' : '' ?>">
+      <span class="nav-icon">⚙️</span> Pengaturan
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="cashier-badge">
+      👤 Kasir: <span id="sidebarCashier">—</span>
+    </div>
+  </div>
+</aside>
+
+<script>
+  // Populate sidebar dynamic info
+  google.script.run
+    .withSuccessHandler(json => {
+      const s = JSON.parse(json);
+      const shopEl = document.getElementById('sidebarShopName');
+      const cashEl = document.getElementById('sidebarCashier');
+      if (shopEl && s.shop_name) shopEl.textContent = s.shop_name;
+      if (cashEl && s.cashier_name) cashEl.textContent = s.cashier_name;
+    })
+    .apiGetSettings();
+</script>
