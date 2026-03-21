@@ -7,7 +7,7 @@ function doGet(e) {
   const page = e.parameter.page || 'home';
   const pageMap = {
     home: 'pages/Home',
-    queue: 'pages/Queue',       // ← new
+    queue: 'pages/Queue',
     analytics: 'pages/Analytics',
     menu: 'pages/MenuManager',
     settings: 'pages/Settings',
@@ -27,6 +27,12 @@ function doGet(e) {
 
 function include(filename) {
   return HtmlService.createHtmlOutputFromFile(filename).getContent();
+}
+
+// ── Navigation helper — returns exec URL for client-side nav ──
+
+function getScriptUrl() {
+  return ScriptApp.getService().getUrl();
 }
 
 // ============================================================

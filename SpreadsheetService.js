@@ -4,21 +4,44 @@
 
 const SpreadsheetService = (() => {
 
-  // ── FIX: helper biar ga null waktu jalan sebagai Web App ──
+  // ── Spreadsheet accessor ──────────────────────────────────
+  // Strategi:
+  // 1. Coba getActiveSpreadsheet() dulu (works kalau container-bound)
+  // 2. Kalau null, ambil dari PropertiesService (disimpan saat pertama kali setup)
+  // 3. Kalau belum ada sama sekali, buat spreadsheet baru otomatis
   function getSpreadsheet() {
-    return SpreadsheetApp.getActiveSpreadsheet()
-      || SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+    // Coba active dulu
+    const active = SpreadsheetApp.getActiveSpreadsheet();
+    if (active) return active;
+
+    // Coba dari PropertiesService
+    const props = PropertiesService.getScriptProperties();
+    const storedId = props.getProperty('SPREADSHEET_ID');
+    if (storedId) {
+      try {
+        return SpreadsheetApp.openById(storedId);
+      } catch (e) {
+        // ID tidak valid, lanjut buat baru
+      }
+    }
+
+    // Buat spreadsheet baru dan simpan ID-nya
+    const newSs = SpreadsheetApp.create(CONFIG.APP_NAME + ' Database');
+    props.setProperty('SPREADSHEET_ID', newSs.getId());
+    return newSs;
   }
 
+  // ── Sheet helper ──────────────────────────────────────────
+
   function getOrCreateSheet(name, headers) {
-    const ss = getSpreadsheet(); // ← ganti semua getActiveSpreadsheet()
+    const ss = getSpreadsheet();
     let sheet = ss.getSheetByName(name);
     if (!sheet) {
       sheet = ss.insertSheet(name);
       if (headers && headers.length > 0) {
         sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
         sheet.getRange(1, 1, 1, headers.length)
-          .setBackground('#1a1a2e')
+          .setBackground('#1a73e8')
           .setFontColor('#ffffff')
           .setFontWeight('bold');
         sheet.setFrozenRows(1);
@@ -32,13 +55,14 @@ const SpreadsheetService = (() => {
       'id', 'name', 'category', 'price', 'description', 'imageUrl', 'isAvailable', 'createdAt'
     ]);
     getOrCreateSheet(CONFIG.SHEETS.ORDERS, [
-      'orderId', 'createdAt', 'cashierName', 'status', 'totalAmount', 'paymentMethod', 'notes'
+      'orderId', 'createdAt', 'cashierName', 'status', 'totalAmount', 'paymentMethod', 'notes', 'customerName'
     ]);
     getOrCreateSheet(CONFIG.SHEETS.ORDER_ITEMS, [
       'id', 'orderId', 'menuId', 'menuName', 'qty', 'unitPrice', 'subtotal'
     ]);
-    getOrCreateSheet(CONFIG.SHEETS.SETTINGS, ['key', 'value']);
-    seedSettings();
+    getOrCreateSheet(CONFIG.SHEETS.ORDERS, [
+      'orderId', 'createdAt', 'cashierName', 'status', 'totalAmount', 'paymentMethod', 'notes', 'customerName'
+    ]);
   }
 
   function seedSettings() {

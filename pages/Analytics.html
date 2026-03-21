@@ -1,321 +1,563 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <base target="_top">
   <?!= include('components/Styles') ?>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <style>
+    /* ══════════════════════════════════════
+       ANALYTICS — Mobile First
+    ══════════════════════════════════════ */
+
+    .analytics-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 16px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* ── Filter bar ── */
+    .filter-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .filter-bar .date-row {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .filter-bar input[type="date"] {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .filter-shortcuts {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    /* ── Stats grid — 2 col mobile, 4 col desktop ── */
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 14px;
-      margin-bottom: 24px;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
     }
+
     .stat-card {
       background: var(--bg-2);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 18px 20px;
-    }
-    .stat-label { font-size: 12px; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 8px; }
-    .stat-value { font-family: var(--font-head); font-size: 24px; font-weight: 800; color: var(--text); }
-    .stat-value.accent { color: var(--accent); }
-    .stat-sub { font-size: 12px; color: var(--text-3); margin-top: 4px; }
-
-    .charts-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      margin-bottom: 24px;
+      padding: 14px 16px;
+      box-shadow: var(--shadow-sm);
     }
 
+    .stat-label {
+      font-size: 11px;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    .stat-value {
+      font-family: var(--font-head);
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.2;
+    }
+
+    .stat-value.accent {
+      color: var(--accent);
+    }
+
+    /* ── Charts — stacked on mobile ── */
     .chart-card {
       background: var(--bg-2);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 20px;
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow-sm);
     }
 
-    .filter-bar {
-      display: flex; gap: 10px; align-items: center;
-      margin-bottom: 20px; flex-wrap: wrap;
+    .chart-card-title {
+      font-family: var(--font-head);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 14px;
     }
 
-    /* Transaction table */
-    .tx-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    .tx-table th {
-      padding: 10px 14px;
-      text-align: left;
-      font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px;
-      color: var(--text-3); font-weight: 600;
+    /* ── Top items ── */
+    .top-items-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .top-item-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .top-item-rank {
+      font-size: 11px;
+      color: var(--text-3);
+      width: 16px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .top-item-name {
+      font-size: 13px;
+      color: var(--text);
+      min-width: 80px;
+      flex: 1;
+    }
+
+    .top-item-bar-wrap {
+      flex: 2;
+      height: 6px;
+      background: var(--bg-3);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .top-item-bar {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 3px;
+      transition: width 0.4s ease;
+    }
+
+    .top-item-qty {
+      font-size: 12px;
+      color: var(--text-2);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* ── Transaction table — scrollable on mobile ── */
+    .tx-wrap {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 12px;
+    }
+
+    .tx-header {
+      padding: 12px 16px;
       border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
+
+    .tx-header-title {
+      font-family: var(--font-head);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .tx-scroll {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .tx-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+      min-width: 560px;
+    }
+
+    .tx-table th {
+      padding: 9px 12px;
+      text-align: left;
+      font-size: 10.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: var(--text-3);
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-3);
+      white-space: nowrap;
+    }
+
     .tx-table td {
-      padding: 11px 14px;
+      padding: 10px 12px;
       border-bottom: 1px solid var(--border);
       color: var(--text-2);
+      white-space: nowrap;
     }
-    .tx-table td:first-child { color: var(--text); font-weight: 500; }
-    .tx-table tr:hover td { background: rgba(255,255,255,0.02); }
 
-    .top-items-list { display: flex; flex-direction: column; gap: 8px; }
-    .top-item-row {
-      display: flex; align-items: center; gap: 10px;
+    .tx-table td:first-child {
+      color: var(--text);
+      font-weight: 500;
     }
-    .top-item-rank { font-size: 11px; color: var(--text-3); width: 18px; text-align: right; }
-    .top-item-bar-wrap { flex: 1; height: 6px; background: var(--bg-3); border-radius: 3px; overflow: hidden; }
-    .top-item-bar { height: 100%; background: var(--accent); border-radius: 3px; }
-    .top-item-name { font-size: 13px; color: var(--text); min-width: 100px; }
-    .top-item-qty { font-size: 12px; color: var(--text-2); white-space: nowrap; }
+
+    .tx-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* ══════════════════════════════════════
+       DESKTOP ≥ 768px
+    ══════════════════════════════════════ */
+    @media (min-width: 768px) {
+      .analytics-body {
+        padding: 24px 28px;
+      }
+
+      .filter-bar {
+        flex-wrap: nowrap;
+      }
+
+      .filter-bar .date-row {
+        flex: 0 0 auto;
+      }
+
+      .filter-bar input[type="date"] {
+        width: 150px;
+        flex: 0 0 auto;
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+        margin-bottom: 20px;
+      }
+
+      .stat-value {
+        font-size: 24px;
+      }
+
+      .charts-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+        margin-bottom: 16px;
+      }
+
+      .charts-row .chart-card {
+        margin-bottom: 0;
+      }
+
+      .bottom-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+        margin-bottom: 16px;
+      }
+
+      .bottom-row .chart-card {
+        margin-bottom: 0;
+      }
+
+      .tx-table {
+        min-width: unset;
+      }
+    }
   </style>
 </head>
+
 <body>
-<div class="app-shell">
-  <?!= include('components/Sidebar') ?>
+  <div class="app-shell">
+    <?!= include('components/Sidebar') ?>
 
-  <div class="main-content">
-    <div class="page-header">
-      <div class="page-title">Analitik</div>
-      <div class="page-subtitle">Laporan penjualan & transaksi</div>
-    </div>
-
-    <div class="page-body">
-      <!-- Filter Bar -->
-      <div class="filter-bar">
-        <label class="form-label" style="margin:0">Periode:</label>
-        <input type="date" class="form-control" id="dateFrom" style="width:160px">
-        <span style="color:var(--text-3)">—</span>
-        <input type="date" class="form-control" id="dateTo" style="width:160px">
-        <button class="btn btn-primary" onclick="loadAnalytics()">Tampilkan</button>
-        <button class="btn btn-ghost" onclick="setToday()">Hari Ini</button>
-        <button class="btn btn-ghost" onclick="setThisWeek()">7 Hari</button>
-        <button class="btn btn-ghost" onclick="setThisMonth()">Bulan Ini</button>
+    <div class="main-content">
+      <div class="page-header">
+        <div class="page-title">Analitik</div>
+        <div class="page-subtitle">Laporan penjualan & transaksi</div>
       </div>
 
-      <!-- Stats cards -->
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-label">💰 Total Revenue</div>
-          <div class="stat-value accent" id="statRevenue">—</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">📋 Total Order</div>
-          <div class="stat-value" id="statOrders">—</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">🛍️ Item Terjual</div>
-          <div class="stat-value" id="statItems">—</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">📈 Rata-rata Order</div>
-          <div class="stat-value" id="statAvg">—</div>
-        </div>
-      </div>
+      <div class="analytics-body">
 
-      <!-- Charts -->
-      <div class="charts-row">
-        <div class="chart-card">
-          <div class="card-title">Revenue per Jam</div>
-          <canvas id="hourlyChart" height="180"></canvas>
+        <!-- Filter bar -->
+        <div class="filter-bar">
+          <div class="date-row">
+            <input type="date" class="form-control" id="dateFrom">
+            <span style="color:var(--text-3);flex-shrink:0">—</span>
+            <input type="date" class="form-control" id="dateTo">
+            <button class="btn btn-primary btn-sm" onclick="loadAnalytics()">Tampilkan</button>
+          </div>
+          <div class="filter-shortcuts">
+            <button class="btn btn-ghost btn-sm" onclick="setToday()">Hari Ini</button>
+            <button class="btn btn-ghost btn-sm" onclick="setThisWeek()">7 Hari</button>
+            <button class="btn btn-ghost btn-sm" onclick="setThisMonth()">Bulan Ini</button>
+          </div>
         </div>
-        <div class="chart-card">
-          <div class="card-title">Kategori Penjualan</div>
-          <canvas id="catChart" height="180"></canvas>
-        </div>
-      </div>
 
-      <!-- Top items + Payment breakdown -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
-        <div class="card">
-          <div class="card-title">🏆 Top Menu</div>
-          <div id="topItemsList" class="top-items-list"></div>
+        <!-- Stats — 2 col mobile, 4 col desktop -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Revenue</div>
+            <div class="stat-value accent" id="statRevenue">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Total Order</div>
+            <div class="stat-value" id="statOrders">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Item Terjual</div>
+            <div class="stat-value" id="statItems">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Rata-rata Order</div>
+            <div class="stat-value" id="statAvg">—</div>
+          </div>
         </div>
-        <div class="card">
-          <div class="card-title">💳 Metode Bayar</div>
-          <canvas id="payChart" height="160"></canvas>
-        </div>
-      </div>
 
-      <!-- Transaction list -->
-      <div class="card" style="padding:0;overflow:hidden">
-        <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
-          <div class="card-title" style="margin:0">Riwayat Transaksi</div>
-          <span id="txCount" style="font-size:12px;color:var(--text-3)"></span>
+        <!-- Charts row — stacked mobile, side by side desktop -->
+        <div class="charts-row">
+          <div class="chart-card">
+            <div class="chart-card-title">Revenue per Jam</div>
+            <canvas id="hourlyChart" height="160"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card-title">Kategori Penjualan</div>
+            <canvas id="catChart" height="160"></canvas>
+          </div>
         </div>
-        <div style="overflow-x:auto">
-          <table class="tx-table">
-            <thead>
-              <tr>
-                <th>Order ID</th>
-                <th>Waktu</th>
-                <th>Kasir</th>
-                <th>Item</th>
-                <th>Bayar</th>
-                <th>Status</th>
-                <th class="text-right">Total</th>
-              </tr>
-            </thead>
-            <tbody id="txTableBody">
-              <tr><td colspan="7" class="empty-state">Memuat data...</td></tr>
-            </tbody>
-          </table>
+
+        <!-- Bottom row -->
+        <div class="bottom-row">
+          <div class="chart-card">
+            <div class="chart-card-title">Top Menu</div>
+            <div id="topItemsList" class="top-items-list"></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card-title">Metode Pembayaran</div>
+            <canvas id="payChart" height="160"></canvas>
+          </div>
         </div>
+
+        <!-- Transaction list -->
+        <div class="tx-wrap">
+          <div class="tx-header">
+            <div class="tx-header-title">Riwayat Transaksi</div>
+            <span id="txCount" style="font-size:12px;color:var(--text-3)"></span>
+          </div>
+          <div class="tx-scroll">
+            <table class="tx-table">
+              <thead>
+                <tr>
+                  <th>Order ID</th>
+                  <th>Pelanggan</th>
+                  <th>Waktu</th>
+                  <th>Kasir</th>
+                  <th>Item</th>
+                  <th>Bayar</th>
+                  <th>Status</th>
+                  <th style="text-align:right">Total</th>
+                </tr>
+              </thead>
+              <tbody id="txTableBody">
+                <tr>
+                  <td colspan="8" style="text-align:center;padding:24px;color:var(--text-3)">Memuat data...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
-</div>
 
-<?!= include('components/Scripts') ?>
-<script>
-  let hourlyChartInst, catChartInst, payChartInst;
+  <?!= include('components/Scripts') ?>
+  <script>
+    var hourlyChartInst, catChartInst, payChartInst;
 
-  const chartDefaults = {
-    color: '#9a9097',
-    font: { family: 'DM Sans, sans-serif', size: 12 },
-  };
-  Chart.defaults.color = chartDefaults.color;
-  Chart.defaults.font  = chartDefaults.font;
-
-  window.addEventListener('load', () => {
-    setToday();
-    loadAnalytics();
-  });
-
-  function setToday() {
-    const t = todayISO();
-    document.getElementById('dateFrom').value = t;
-    document.getElementById('dateTo').value   = t;
-  }
-  function setThisWeek() {
-    const d = new Date(); d.setDate(d.getDate() - 6);
-    document.getElementById('dateFrom').value = d.toISOString().split('T')[0];
-    document.getElementById('dateTo').value   = todayISO();
-  }
-  function setThisMonth() {
-    const d = new Date();
-    document.getElementById('dateFrom').value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
-    document.getElementById('dateTo').value   = todayISO();
-  }
-
-  function loadAnalytics() {
-    const from = document.getElementById('dateFrom').value;
-    const to   = document.getElementById('dateTo').value;
-    if (!from || !to) return Toast.info('Pilih tanggal terlebih dahulu');
-
-    Loader.show();
-    Promise.all([
-      gasCall('apiGetSummaryByRange', from, to),
-      gasCall('apiGetTransactionList', from, to),
-      gasCall('apiGetHourlyRevenue', from),
-    ]).then(([summary, txList, hourly]) => {
-      Loader.hide();
-      renderStats(summary);
-      renderHourlyChart(hourly);
-      renderCatChart(summary.categoryBreakdown);
-      renderPayChart(summary.paymentBreakdown);
-      renderTopItems(summary.topItems);
-      renderTransactions(txList);
-    }).catch(e => { Loader.hide(); Toast.error('Gagal memuat data'); console.error(e); });
-  }
-
-  function renderStats(s) {
-    document.getElementById('statRevenue').textContent = formatIDR(s.totalRevenue);
-    document.getElementById('statOrders').textContent  = s.totalOrders;
-    document.getElementById('statItems').textContent   = s.totalItems;
-    document.getElementById('statAvg').textContent     = formatIDR(s.avgOrderValue);
-  }
-
-  function renderHourlyChart(hourly) {
-    const ctx = document.getElementById('hourlyChart').getContext('2d');
-    if (hourlyChartInst) hourlyChartInst.destroy();
-    hourlyChartInst = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: hourly.map((_, i) => `${i}:00`),
-        datasets: [{
-          data: hourly,
-          backgroundColor: 'rgba(232,168,56,0.6)',
-          borderColor: '#e8a838',
-          borderWidth: 1,
-          borderRadius: 4,
-        }],
-      },
-      options: {
-        plugins: { legend: { display: false } },
-        scales: {
-          x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { maxRotation: 0, maxTicksLimit: 8 } },
-          y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { callback: v => 'Rp' + (v/1000).toFixed(0)+'k' } },
-        },
-      },
+    window.addEventListener('load', function () {
+      // Chart defaults — sesuai light theme
+      Chart.defaults.color = '#9298AD';
+      Chart.defaults.font = { family: 'DM Sans, sans-serif', size: 12 };
+      setToday();
+      loadAnalytics();
     });
-  }
 
-  function renderCatChart(breakdown) {
-    const ctx = document.getElementById('catChart').getContext('2d');
-    if (catChartInst) catChartInst.destroy();
-    const labels = Object.keys(breakdown);
-    const data   = Object.values(breakdown);
-    catChartInst = new Chart(ctx, {
-      type: 'doughnut',
-      data: {
-        labels,
-        datasets: [{ data, backgroundColor: ['#e8a838','#4f9cf9','#3ecf6c'], borderWidth: 0 }],
-      },
-      options: {
-        plugins: { legend: { position: 'bottom' } },
-        cutout: '65%',
-      },
-    });
-  }
-
-  function renderPayChart(breakdown) {
-    const ctx = document.getElementById('payChart').getContext('2d');
-    if (payChartInst) payChartInst.destroy();
-    const labels = Object.keys(breakdown);
-    const data   = Object.values(breakdown);
-    payChartInst = new Chart(ctx, {
-      type: 'pie',
-      data: {
-        labels,
-        datasets: [{ data, backgroundColor: ['#e8a838','#9b71f5','#4f9cf9'], borderWidth: 0 }],
-      },
-      options: { plugins: { legend: { position: 'bottom' } } },
-    });
-  }
-
-  function renderTopItems(items) {
-    const el  = document.getElementById('topItemsList');
-    if (!items.length) { el.innerHTML = '<p class="text-muted">Belum ada data</p>'; return; }
-    const max = items[0].qty;
-    el.innerHTML = items.slice(0,8).map((item, i) => `
-      <div class="top-item-row">
-        <span class="top-item-rank">${i+1}</span>
-        <span class="top-item-name">${item.name}</span>
-        <div class="top-item-bar-wrap">
-          <div class="top-item-bar" style="width:${(item.qty/max*100).toFixed(0)}%"></div>
-        </div>
-        <span class="top-item-qty">${item.qty} pcs</span>
-      </div>`).join('');
-  }
-
-  function renderTransactions(list) {
-    const tbody = document.getElementById('txTableBody');
-    document.getElementById('txCount').textContent = `${list.length} transaksi`;
-    if (!list.length) {
-      tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><p>Tidak ada transaksi</p></div></td></tr>`;
-      return;
+    function setToday() {
+      var t = todayISO();
+      document.getElementById('dateFrom').value = t;
+      document.getElementById('dateTo').value = t;
     }
-    tbody.innerHTML = list.map(o => `
-      <tr>
-        <td style="font-family:monospace;font-size:12px">${o.orderId}</td>
-        <td>${formatDate(o.createdAt)}</td>
-        <td>${o.cashierName}</td>
-        <td>${o.itemCount} item</td>
-        <td>${o.paymentMethod}</td>
-        <td>${statusBadge(o.status)}</td>
-        <td class="text-right" style="color:var(--accent);font-weight:600">${formatIDR(o.totalAmount)}</td>
-      </tr>`).join('');
-  }
-</script>
+    function setThisWeek() {
+      var d = new Date(); d.setDate(d.getDate() - 6);
+      document.getElementById('dateFrom').value = d.toISOString().split('T')[0];
+      document.getElementById('dateTo').value = todayISO();
+    }
+    function setThisMonth() {
+      var d = new Date();
+      document.getElementById('dateFrom').value = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-01';
+      document.getElementById('dateTo').value = todayISO();
+    }
+
+    function loadAnalytics() {
+      var from = document.getElementById('dateFrom').value;
+      var to = document.getElementById('dateTo').value;
+      if (!from || !to) return Toast.info('Pilih tanggal terlebih dahulu');
+
+      Loader.show();
+      Promise.all([
+        gasCall('apiGetSummaryByRange', from, to),
+        gasCall('apiGetTransactionList', from, to),
+        gasCall('apiGetHourlyRevenue', from),
+      ]).then(function (results) {
+        var summary = results[0];
+        var txList = results[1];
+        var hourly = results[2];
+        Loader.hide();
+        renderStats(summary);
+        renderHourlyChart(hourly);
+        renderCatChart(summary.categoryBreakdown);
+        renderPayChart(summary.paymentBreakdown);
+        renderTopItems(summary.topItems);
+        renderTransactions(txList);
+      }).catch(function (e) {
+        Loader.hide();
+        Toast.error('Gagal memuat data');
+        console.error(e);
+      });
+    }
+
+    function renderStats(s) {
+      document.getElementById('statRevenue').textContent = formatIDR(s.totalRevenue);
+      document.getElementById('statOrders').textContent = s.totalOrders;
+      document.getElementById('statItems').textContent = s.totalItems;
+      document.getElementById('statAvg').textContent = formatIDR(s.avgOrderValue);
+    }
+
+    function renderHourlyChart(hourly) {
+      var ctx = document.getElementById('hourlyChart').getContext('2d');
+      if (hourlyChartInst) hourlyChartInst.destroy();
+      hourlyChartInst = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: hourly.map(function (_, i) { return i + ':00'; }),
+          datasets: [{
+            data: hourly,
+            backgroundColor: 'rgba(59,91,252,0.15)',
+            borderColor: '#3B5BFC',
+            borderWidth: 1,
+            borderRadius: 4,
+          }],
+        },
+        options: {
+          plugins: { legend: { display: false } },
+          scales: {
+            x: {
+              grid: { color: 'rgba(0,0,0,0.04)' },
+              ticks: { maxRotation: 0, maxTicksLimit: 8 }
+            },
+            y: {
+              grid: { color: 'rgba(0,0,0,0.04)' },
+              ticks: { callback: function (v) { return 'Rp' + (v / 1000).toFixed(0) + 'k'; } }
+            },
+          },
+        },
+      });
+    }
+
+    function renderCatChart(breakdown) {
+      var ctx = document.getElementById('catChart').getContext('2d');
+      if (catChartInst) catChartInst.destroy();
+      catChartInst = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: Object.keys(breakdown),
+          datasets: [{
+            data: Object.values(breakdown),
+            backgroundColor: ['#3B5BFC', '#16A34A', '#D97706'],
+            borderWidth: 2,
+            borderColor: '#FFFFFF',
+          }],
+        },
+        options: {
+          plugins: { legend: { position: 'bottom', labels: { padding: 16, boxWidth: 12 } } },
+          cutout: '65%',
+        },
+      });
+    }
+
+    function renderPayChart(breakdown) {
+      var ctx = document.getElementById('payChart').getContext('2d');
+      if (payChartInst) payChartInst.destroy();
+      payChartInst = new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: Object.keys(breakdown),
+          datasets: [{
+            data: Object.values(breakdown),
+            backgroundColor: ['#3B5BFC', '#9b71f5', '#16A34A'],
+            borderWidth: 2,
+            borderColor: '#FFFFFF',
+          }],
+        },
+        options: {
+          plugins: { legend: { position: 'bottom', labels: { padding: 16, boxWidth: 12 } } },
+        },
+      });
+    }
+
+    function renderTopItems(items) {
+      var el = document.getElementById('topItemsList');
+      if (!items || !items.length) {
+        el.innerHTML = '<p style="color:var(--text-3);font-size:13px">Belum ada data</p>';
+        return;
+      }
+      var max = items[0].qty;
+      el.innerHTML = items.slice(0, 8).map(function (item, i) {
+        return '<div class="top-item-row">' +
+          '<span class="top-item-rank">' + (i + 1) + '</span>' +
+          '<span class="top-item-name">' + item.name + '</span>' +
+          '<div class="top-item-bar-wrap">' +
+          '<div class="top-item-bar" style="width:' + (item.qty / max * 100).toFixed(0) + '%"></div>' +
+          '</div>' +
+          '<span class="top-item-qty">' + item.qty + ' pcs</span>' +
+          '</div>';
+      }).join('');
+    }
+
+    function renderTransactions(list) {
+      var tbody = document.getElementById('txTableBody');
+      document.getElementById('txCount').textContent = list.length + ' transaksi';
+      if (!list.length) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--text-3)">Tidak ada transaksi</td></tr>';
+        return;
+      }
+      tbody.innerHTML = list.map(function (o) {
+        return '<tr>' +
+          '<td style="font-family:monospace;font-size:11px">' + o.orderId + '</td>' +
+          '<td>' + (o.customerName || '<span style="color:var(--text-3)">—</span>') + '</td>' +
+          '<td>' + formatDate(o.createdAt) + '</td>' +
+          '<td>' + o.cashierName + '</td>' +
+          '<td>' + o.itemCount + ' item</td>' +
+          '<td>' + o.paymentMethod + '</td>' +
+          '<td>' + statusBadge(o.status) + '</td>' +
+          '<td style="text-align:right;color:var(--accent);font-weight:600">' + formatIDR(o.totalAmount) + '</td>' +
+          '</tr>';
+      }).join('');
+    }
+  </script>
 </body>
+
 </html>

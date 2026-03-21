@@ -5,7 +5,7 @@
 const CONFIG = {
   APP_NAME: 'Brew POS',
   VERSION: '1.0.0',
-  SPREADSHEET_ID: '1BAWdsU9x8zA555YSr9HbbJnIXkypVVLulR78W4VWrM8',
+  // Tidak ada SPREADSHEET_ID — dihandle otomatis oleh SpreadsheetService
 
   SHEETS: {
     MENU: 'Menu',
@@ -44,7 +44,7 @@ const CONFIG = {
       TOTAL_AMOUNT: 5,
       PAYMENT_METHOD: 6,
       NOTES: 7,
-      CUSTOMER_NAME: 8,  // nama pelanggan + nomor meja, opsional
+      CUSTOMER_NAME: 8,
     },
     ORDER_ITEMS: {
       ID: 1,
