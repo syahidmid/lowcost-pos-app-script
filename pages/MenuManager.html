@@ -1,306 +1,565 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <base target="_top">
   <?!= include('components/Styles') ?>
   <style>
-    .toolbar {
-      display: flex; gap: 10px; align-items: center;
-      margin-bottom: 20px; flex-wrap: wrap;
+    /* ══════════════════════════════════════
+       MENU MANAGER — Mobile First
+    ══════════════════════════════════════ */
+
+    .menu-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 16px;
+      -webkit-overflow-scrolling: touch;
     }
 
+    /* ── Toolbar ── */
+    .toolbar {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .toolbar-top {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .toolbar-top .btn {
+      flex-shrink: 0;
+    }
+
+    .toolbar-top input {
+      flex: 1;
+    }
+
+    .filter-tabs {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      padding-bottom: 2px;
+    }
+
+    .filter-tabs::-webkit-scrollbar {
+      display: none;
+    }
+
+    .filter-tab {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-2);
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: var(--transition);
+      -webkit-tap-highlight-color: transparent;
+      flex-shrink: 0;
+    }
+
+    .filter-tab.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    /* ── Menu count ── */
+    .menu-count {
+      font-size: 12px;
+      color: var(--text-3);
+      margin-bottom: 12px;
+    }
+
+    /* ── Card grid — mobile single col, desktop table ── */
+    .menu-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .menu-card-item {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .menu-card-icon {
+      width: 44px;
+      height: 44px;
+      background: var(--bg-3);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+
+    .menu-card-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .menu-card-name {
+      font-family: var(--font-head);
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+
+    .menu-card-meta {
+      font-size: 12px;
+      color: var(--text-3);
+      margin-bottom: 6px;
+    }
+
+    .menu-card-price {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .menu-card-desc {
+      font-size: 11.5px;
+      color: var(--text-3);
+      margin-top: 2px;
+      line-height: 1.4;
+    }
+
+    .menu-card-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    /* ── Desktop: table layout ── */
     .menu-table-wrap {
+      display: none;
       background: var(--bg-2);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       overflow: hidden;
+      box-shadow: var(--shadow-sm);
     }
 
-    .menu-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .menu-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
     .menu-table th {
       padding: 11px 16px;
-      text-align: left; background: var(--bg-3);
-      font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px;
-      color: var(--text-3); font-weight: 600;
+      text-align: left;
+      background: var(--bg-3);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: var(--text-3);
+      font-weight: 600;
       border-bottom: 1px solid var(--border);
     }
+
     .menu-table td {
       padding: 12px 16px;
       border-bottom: 1px solid var(--border);
-      color: var(--text-2); vertical-align: middle;
+      color: var(--text-2);
+      vertical-align: middle;
     }
-    .menu-table tr:last-child td { border-bottom: none; }
-    .menu-table tr:hover td { background: rgba(255,255,255,0.02); }
 
-    .menu-item-name { font-weight: 600; color: var(--text); font-size: 13px; }
-    .menu-item-desc { font-size: 11px; color: var(--text-3); margin-top: 2px; }
-    .actions-cell { display: flex; gap: 6px; }
+    .menu-table tr:last-child td {
+      border-bottom: none;
+    }
 
-    .filter-tabs {
-      display: flex; gap: 0;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      overflow: hidden;
+    .menu-table tr:hover td {
+      background: var(--bg-3);
     }
-    .filter-tab {
-      padding: 8px 14px; cursor: pointer;
-      font-size: 12px; font-weight: 600;
-      color: var(--text-2); background: var(--bg-3);
-      transition: var(--transition); user-select: none;
-      border-right: 1px solid var(--border);
+
+    .menu-item-name {
+      font-weight: 600;
+      color: var(--text);
+      font-size: 13px;
     }
-    .filter-tab:last-child { border-right: none; }
-    .filter-tab.active { background: var(--accent); color: #0f0f13; }
-    .filter-tab:hover:not(.active) { background: var(--border); color: var(--text); }
+
+    .menu-item-desc {
+      font-size: 11px;
+      color: var(--text-3);
+      margin-top: 2px;
+    }
+
+    .actions-cell {
+      display: flex;
+      gap: 6px;
+    }
+
+    /* ══════════════════════════════════════
+       DESKTOP ≥ 768px
+    ══════════════════════════════════════ */
+    @media (min-width: 768px) {
+      .menu-body {
+        padding: 24px 28px;
+      }
+
+      .toolbar {
+        flex-direction: row;
+        align-items: center;
+      }
+
+      .toolbar-top {
+        flex: 1;
+      }
+
+      .toolbar-top input {
+        max-width: 220px;
+      }
+
+      /* Hide cards, show table on desktop */
+      .menu-cards {
+        display: none;
+      }
+
+      .menu-table-wrap {
+        display: block;
+      }
+    }
   </style>
 </head>
+
 <body>
-<div class="app-shell">
-  <?!= include('components/Sidebar') ?>
+  <div class="app-shell">
+    <?!= include('components/Sidebar') ?>
 
-  <div class="main-content">
-    <div class="page-header">
-      <div class="page-title">Manajemen Menu</div>
-      <div class="page-subtitle">Kelola item menu, harga, dan ketersediaan</div>
-    </div>
-
-    <div class="page-body">
-      <div class="toolbar">
-        <button class="btn btn-primary" onclick="openAddModal()">
-          ＋ Tambah Menu
-        </button>
-        <div class="filter-tabs" id="filterTabs">
-          <div class="filter-tab active" onclick="filterByCategory('all', this)">Semua</div>
-          <div class="filter-tab" onclick="filterByCategory('Coffee', this)">☕ Coffee</div>
-          <div class="filter-tab" onclick="filterByCategory('No Coffee', this)">🥤 No Coffee</div>
-          <div class="filter-tab" onclick="filterByCategory('Snack', this)">🍩 Snack</div>
-        </div>
-        <input type="text" class="form-control" id="searchInput" placeholder="🔍 Cari menu..." style="width:200px" oninput="filterSearch()">
-        <span id="menuCount" style="margin-left:auto;font-size:12px;color:var(--text-3)"></span>
+    <div class="main-content">
+      <div class="page-header">
+        <div class="page-title">Menu</div>
+        <div class="page-subtitle">Kelola item menu, harga, dan ketersediaan</div>
       </div>
 
-      <div class="menu-table-wrap">
-        <table class="menu-table">
-          <thead>
-            <tr>
-              <th>Menu</th>
-              <th>Kategori</th>
-              <th>Harga</th>
-              <th>Status</th>
-              <th>Aksi</th>
-            </tr>
-          </thead>
-          <tbody id="menuTableBody">
-            <tr><td colspan="5"><div class="empty-state"><div class="spinner"></div><p style="margin-top:12px">Memuat menu...</p></div></td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-</div>
+      <div class="menu-body">
 
-<!-- ── Add/Edit Modal ── -->
-<div class="modal-overlay" id="menuModal" onclick="closeModalOnOverlay(event,'menuModal')">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title" id="menuModalTitle">Tambah Menu</div>
-      <button class="modal-close" onclick="closeModal('menuModal')">✕</button>
-    </div>
-    <input type="hidden" id="editMenuId">
-    <div class="form-group">
-      <label class="form-label">Nama Menu *</label>
-      <input type="text" class="form-control" id="menuName" placeholder="Contoh: Cappuccino">
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-      <div class="form-group">
-        <label class="form-label">Kategori *</label>
-        <select class="form-control" id="menuCategory">
-          <option value="Coffee">☕ Coffee</option>
-          <option value="No Coffee">🥤 No Coffee</option>
-          <option value="Snack">🍩 Snack</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Harga (Rp) *</label>
-        <input type="number" class="form-control" id="menuPrice" placeholder="25000" min="0">
-      </div>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Deskripsi</label>
-      <input type="text" class="form-control" id="menuDesc" placeholder="Deskripsi singkat (opsional)">
-    </div>
-    <div class="form-group">
-      <label class="form-label">URL Gambar</label>
-      <input type="url" class="form-control" id="menuImageUrl" placeholder="https://... (opsional)">
-    </div>
-    <div style="display:flex;gap:10px;margin-top:8px">
-      <button class="btn btn-ghost flex-1" onclick="closeModal('menuModal')">Batal</button>
-      <button class="btn btn-primary flex-1" onclick="saveMenu()">Simpan</button>
-    </div>
-  </div>
-</div>
-
-<!-- ── Delete confirm ── -->
-<div class="modal-overlay" id="deleteModal" onclick="closeModalOnOverlay(event,'deleteModal')">
-  <div class="modal" style="max-width:380px">
-    <div class="modal-header">
-      <div class="modal-title">Hapus Menu</div>
-      <button class="modal-close" onclick="closeModal('deleteModal')">✕</button>
-    </div>
-    <p style="color:var(--text-2);margin-bottom:20px">
-      Yakin ingin menghapus <strong id="deleteMenuName" style="color:var(--text)"></strong>?
-      Tindakan ini tidak bisa dibatalkan.
-    </p>
-    <input type="hidden" id="deleteMenuId">
-    <div style="display:flex;gap:10px">
-      <button class="btn btn-ghost flex-1" onclick="closeModal('deleteModal')">Batal</button>
-      <button class="btn btn-danger flex-1" onclick="confirmDelete()">Hapus</button>
-    </div>
-  </div>
-</div>
-
-<?!= include('components/Scripts') ?>
-<script>
-  let allMenus = [];
-  let currentCat = 'all';
-
-  window.addEventListener('load', loadMenus);
-
-  function loadMenus() {
-    gasCall('apiGetMenus').then(menus => {
-      allMenus = menus;
-      renderTable(allMenus);
-    }).catch(() => Toast.error('Gagal memuat menu'));
-  }
-
-  function renderTable(menus) {
-    const tbody = document.getElementById('menuTableBody');
-    document.getElementById('menuCount').textContent = `${menus.length} menu`;
-    if (!menus.length) {
-      tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><span class="empty-icon">🍽️</span><p>Belum ada menu</p></div></td></tr>`;
-      return;
-    }
-    const catEmoji = { Coffee:'☕', 'No Coffee':'🥤', Snack:'🍩' };
-    tbody.innerHTML = menus.map(m => `
-      <tr>
-        <td>
-          <div class="menu-item-name">${catEmoji[m.category] || '🍽️'} ${m.name}</div>
-          ${m.description ? `<div class="menu-item-desc">${m.description}</div>` : ''}
-        </td>
-        <td>${m.category}</td>
-        <td style="color:var(--accent);font-weight:600">${formatIDR(m.price)}</td>
-        <td>
-          <span class="badge ${m.isAvailable ? 'badge-available' : 'badge-unavail'}" 
-                style="cursor:pointer" onclick="toggleAvail('${m.id}')">
-            ${m.isAvailable ? '✅ Tersedia' : '❌ Habis'}
-          </span>
-        </td>
-        <td>
-          <div class="actions-cell">
-            <button class="btn btn-ghost btn-sm" onclick="openEditModal('${m.id}')">✏️ Edit</button>
-            <button class="btn btn-danger btn-sm" onclick="openDeleteModal('${m.id}','${m.name.replace(/'/g,'\\'')}')">🗑️</button>
+        <!-- Toolbar -->
+        <div class="toolbar">
+          <div class="toolbar-top">
+            <button class="btn btn-primary btn-sm" onclick="openAddModal()">+ Tambah</button>
+            <input type="text" class="form-control" id="searchInput" placeholder="Cari menu..."
+              oninput="filterSearch()">
           </div>
-        </td>
-      </tr>`).join('');
-  }
+          <div class="filter-tabs">
+            <div class="filter-tab active" onclick="filterByCategory('all',this)">Semua</div>
+            <div class="filter-tab" onclick="filterByCategory('Coffee',this)">☕ Coffee</div>
+            <div class="filter-tab" onclick="filterByCategory('No Coffee',this)">🥤 No Coffee</div>
+            <div class="filter-tab" onclick="filterByCategory('Snack',this)">🍩 Snack</div>
+          </div>
+        </div>
 
-  function filterByCategory(cat, el) {
-    currentCat = cat;
-    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
-    el.classList.add('active');
-    filterSearch();
-  }
+        <div class="menu-count" id="menuCount"></div>
 
-  function filterSearch() {
-    const q = document.getElementById('searchInput').value.toLowerCase();
-    let filtered = currentCat === 'all' ? allMenus : allMenus.filter(m => m.category === currentCat);
-    if (q) filtered = filtered.filter(m => m.name.toLowerCase().includes(q) || (m.description||'').toLowerCase().includes(q));
-    renderTable(filtered);
-  }
+        <!-- Mobile: card list -->
+        <div class="menu-cards" id="menuCards">
+          <div class="empty-state">
+            <div class="spinner"></div>
+            <p style="margin-top:12px">Memuat menu...</p>
+          </div>
+        </div>
 
-  // ── Add/Edit ──
-  function openAddModal() {
-    document.getElementById('menuModalTitle').textContent = 'Tambah Menu';
-    document.getElementById('editMenuId').value   = '';
-    document.getElementById('menuName').value     = '';
-    document.getElementById('menuPrice').value    = '';
-    document.getElementById('menuDesc').value     = '';
-    document.getElementById('menuImageUrl').value = '';
-    document.getElementById('menuCategory').value = 'Coffee';
-    openModal('menuModal');
-  }
+        <!-- Desktop: table -->
+        <div class="menu-table-wrap">
+          <table class="menu-table">
+            <thead>
+              <tr>
+                <th>Menu</th>
+                <th>Kategori</th>
+                <th>Harga</th>
+                <th>Status</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="menuTableBody">
+              <tr>
+                <td colspan="5">
+                  <div class="empty-state">
+                    <div class="spinner"></div>
+                    <p style="margin-top:12px">Memuat menu...</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-  function openEditModal(id) {
-    const m = allMenus.find(x => x.id === id);
-    if (!m) return;
-    document.getElementById('menuModalTitle').textContent  = 'Edit Menu';
-    document.getElementById('editMenuId').value    = m.id;
-    document.getElementById('menuName').value      = m.name;
-    document.getElementById('menuPrice').value     = m.price;
-    document.getElementById('menuDesc').value      = m.description || '';
-    document.getElementById('menuImageUrl').value  = m.imageUrl || '';
-    document.getElementById('menuCategory').value  = m.category;
-    openModal('menuModal');
-  }
+      </div>
+    </div>
+  </div>
 
-  function saveMenu() {
-    const id       = document.getElementById('editMenuId').value;
-    const name     = document.getElementById('menuName').value.trim();
-    const price    = Number(document.getElementById('menuPrice').value);
-    const category = document.getElementById('menuCategory').value;
-    const desc     = document.getElementById('menuDesc').value.trim();
-    const imageUrl = document.getElementById('menuImageUrl').value.trim();
+  <!-- ── Add/Edit Modal ── -->
+  <div class="modal-overlay" id="menuModal" onclick="closeModalOnOverlay(event,'menuModal')">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title" id="menuModalTitle">Tambah Menu</div>
+        <button class="modal-close" onclick="closeModal('menuModal')">✕</button>
+      </div>
+      <input type="hidden" id="editMenuId">
+      <div class="form-group">
+        <label class="form-label">Nama Menu *</label>
+        <input type="text" class="form-control" id="menuName" placeholder="Contoh: Cappuccino">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">Kategori *</label>
+          <select class="form-control" id="menuCategory">
+            <option value="Coffee">☕ Coffee</option>
+            <option value="No Coffee">🥤 No Coffee</option>
+            <option value="Snack">🍩 Snack</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Harga (Rp) *</label>
+          <input type="number" class="form-control" id="menuPrice" placeholder="25000" min="0">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Deskripsi</label>
+        <input type="text" class="form-control" id="menuDesc" placeholder="Opsional">
+      </div>
+      <div class="form-group" style="margin-bottom:20px">
+        <label class="form-label">URL Gambar</label>
+        <input type="url" class="form-control" id="menuImageUrl" placeholder="https://... (opsional)">
+      </div>
+      <div class="flex gap-8">
+        <button class="btn btn-ghost flex-1" onclick="closeModal('menuModal')">Batal</button>
+        <button class="btn btn-primary flex-1" onclick="saveMenu()">Simpan</button>
+      </div>
+    </div>
+  </div>
 
-    if (!name) return Toast.error('Nama menu harus diisi');
-    if (!price || price <= 0) return Toast.error('Harga harus lebih dari 0');
+  <!-- ── Delete confirm ── -->
+  <div class="modal-overlay" id="deleteModal" onclick="closeModalOnOverlay(event,'deleteModal')">
+    <div class="modal" style="max-width:380px">
+      <div class="modal-header">
+        <div class="modal-title">Hapus Menu</div>
+        <button class="modal-close" onclick="closeModal('deleteModal')">✕</button>
+      </div>
+      <p style="color:var(--text-2);margin-bottom:20px;line-height:1.6">
+        Yakin ingin menghapus <strong id="deleteMenuName" style="color:var(--text)"></strong>?
+        Tindakan ini tidak bisa dibatalkan.
+      </p>
+      <input type="hidden" id="deleteMenuId">
+      <div class="flex gap-8">
+        <button class="btn btn-ghost flex-1" onclick="closeModal('deleteModal')">Batal</button>
+        <button class="btn btn-danger flex-1" onclick="confirmDelete()">Hapus</button>
+      </div>
+    </div>
+  </div>
 
-    const data = { name, price, category, description: desc, imageUrl };
-    Loader.show();
-    const call = id
-      ? gasCall('apiUpdateMenu', id, JSON.stringify(data))
-      : gasCall('apiCreateMenu', JSON.stringify(data));
+  <?!= include('components/Scripts') ?>
+  <script>
+    var allMenus = [];
+    var currentCat = 'all';
 
-    call.then(res => {
-      Loader.hide();
-      if (res.success) {
-        Toast.success(id ? 'Menu diperbarui' : 'Menu ditambahkan');
-        closeModal('menuModal');
-        loadMenus();
-      } else {
-        Toast.error(res.error || 'Gagal menyimpan');
+    var CAT_EMOJI = { Coffee: '☕', 'No Coffee': '🥤', Snack: '🍩' };
+    function menuEmoji(cat) { return CAT_EMOJI[cat] || '🍽️'; }
+
+    window.addEventListener('load', function () { loadMenus(); });
+
+    function loadMenus() {
+      gasCall('apiGetMenus').then(function (menus) {
+        allMenus = menus;
+        renderAll(allMenus);
+      }).catch(function (e) {
+        console.error(e);
+        Toast.error('Gagal memuat menu');
+        document.getElementById('menuCards').innerHTML =
+          '<div class="empty-state"><span class="empty-icon">⚠️</span><p>Gagal memuat. Coba refresh.</p></div>';
+        document.getElementById('menuTableBody').innerHTML =
+          '<tr><td colspan="5"><div class="empty-state"><p>Gagal memuat menu</p></div></td></tr>';
+      });
+    }
+
+    function renderAll(menus) {
+      document.getElementById('menuCount').textContent = menus.length + ' menu';
+      renderCards(menus);
+      renderTable(menus);
+    }
+
+    /* ── Mobile cards ── */
+    function renderCards(menus) {
+      var el = document.getElementById('menuCards');
+      if (!menus.length) {
+        el.innerHTML = '<div class="empty-state"><span class="empty-icon">🍽️</span><p>Belum ada menu</p></div>';
+        return;
       }
-    }).catch(() => { Loader.hide(); Toast.error('Terjadi kesalahan'); });
-  }
+      el.innerHTML = menus.map(function (m) {
+        return '<div class="menu-card-item">' +
+          '<div class="menu-card-icon">' + menuEmoji(m.category) + '</div>' +
+          '<div class="menu-card-info">' +
+          '<div class="menu-card-name">' + m.name + '</div>' +
+          '<div class="menu-card-meta">' + m.category + '</div>' +
+          '<div class="menu-card-price">' + formatIDR(m.price) + '</div>' +
+          (m.description ? '<div class="menu-card-desc">' + m.description + '</div>' : '') +
+          '</div>' +
+          '<div class="menu-card-right">' +
+          '<span class="badge ' + (m.isAvailable ? 'badge-available' : 'badge-unavail') + '" ' +
+          'style="cursor:pointer" onclick="toggleAvail(\'' + m.id + '\')">' +
+          (m.isAvailable ? '✓ Tersedia' : '✕ Habis') +
+          '</span>' +
+          '<div class="flex gap-8">' +
+          '<button class="btn btn-ghost btn-sm" onclick="openEditModal(\'' + m.id + '\')">Edit</button>' +
+          '<button class="btn btn-danger btn-sm" onclick="openDeleteModal(\'' + m.id + '\',\'' + m.name.replace(/'/g, "\\'") + '\')">🗑</button>' +
+          '</div>' +
+          '</div>' +
+          '</div>';
+      }).join('');
+    }
 
-  // ── Toggle availability ──
-  function toggleAvail(id) {
-    gasCall('apiToggleMenuAvailability', id).then(res => {
-      if (res.success) loadMenus();
-      else Toast.error('Gagal mengubah status');
-    });
-  }
-
-  // ── Delete ──
-  function openDeleteModal(id, name) {
-    document.getElementById('deleteMenuId').value         = id;
-    document.getElementById('deleteMenuName').textContent = name;
-    openModal('deleteModal');
-  }
-
-  function confirmDelete() {
-    const id = document.getElementById('deleteMenuId').value;
-    Loader.show();
-    gasCall('apiDeleteMenu', id).then(res => {
-      Loader.hide();
-      if (res.success) {
-        Toast.success('Menu dihapus');
-        closeModal('deleteModal');
-        loadMenus();
-      } else {
-        Toast.error('Gagal menghapus menu');
+    /* ── Desktop table ── */
+    function renderTable(menus) {
+      var tbody = document.getElementById('menuTableBody');
+      if (!menus.length) {
+        tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><span class="empty-icon">🍽️</span><p>Belum ada menu</p></div></td></tr>';
+        return;
       }
-    }).catch(() => { Loader.hide(); Toast.error('Terjadi kesalahan'); });
-  }
-</script>
+      tbody.innerHTML = menus.map(function (m) {
+        return '<tr>' +
+          '<td>' +
+          '<div class="menu-item-name">' + menuEmoji(m.category) + ' ' + m.name + '</div>' +
+          (m.description ? '<div class="menu-item-desc">' + m.description + '</div>' : '') +
+          '</td>' +
+          '<td>' + m.category + '</td>' +
+          '<td style="color:var(--accent);font-weight:600">' + formatIDR(m.price) + '</td>' +
+          '<td>' +
+          '<span class="badge ' + (m.isAvailable ? 'badge-available' : 'badge-unavail') + '" ' +
+          'style="cursor:pointer" onclick="toggleAvail(\'' + m.id + '\')">' +
+          (m.isAvailable ? '✓ Tersedia' : '✕ Habis') +
+          '</span>' +
+          '</td>' +
+          '<td>' +
+          '<div class="actions-cell">' +
+          '<button class="btn btn-ghost btn-sm" onclick="openEditModal(\'' + m.id + '\')">Edit</button>' +
+          '<button class="btn btn-danger btn-sm" onclick="openDeleteModal(\'' + m.id + '\',\'' + m.name.replace(/'/g, "\\'") + '\')">🗑️</button>' +
+          '</div>' +
+          '</td>' +
+          '</tr>';
+      }).join('');
+    }
+
+    /* ── Filter ── */
+    function filterByCategory(cat, el) {
+      currentCat = cat;
+      document.querySelectorAll('.filter-tab').forEach(function (t) { t.classList.remove('active'); });
+      el.classList.add('active');
+      filterSearch();
+    }
+
+    function filterSearch() {
+      var q = document.getElementById('searchInput').value.toLowerCase();
+      var filtered = currentCat === 'all' ? allMenus : allMenus.filter(function (m) { return m.category === currentCat; });
+      if (q) filtered = filtered.filter(function (m) {
+        return m.name.toLowerCase().includes(q) || (m.description || '').toLowerCase().includes(q);
+      });
+      renderAll(filtered);
+    }
+
+    /* ── Add / Edit ── */
+    function openAddModal() {
+      document.getElementById('menuModalTitle').textContent = 'Tambah Menu';
+      document.getElementById('editMenuId').value = '';
+      document.getElementById('menuName').value = '';
+      document.getElementById('menuPrice').value = '';
+      document.getElementById('menuDesc').value = '';
+      document.getElementById('menuImageUrl').value = '';
+      document.getElementById('menuCategory').value = 'Coffee';
+      openModal('menuModal');
+    }
+
+    function openEditModal(id) {
+      var m = allMenus.find(function (x) { return x.id === id; });
+      if (!m) return;
+      document.getElementById('menuModalTitle').textContent = 'Edit Menu';
+      document.getElementById('editMenuId').value = m.id;
+      document.getElementById('menuName').value = m.name;
+      document.getElementById('menuPrice').value = m.price;
+      document.getElementById('menuDesc').value = m.description || '';
+      document.getElementById('menuImageUrl').value = m.imageUrl || '';
+      document.getElementById('menuCategory').value = m.category;
+      openModal('menuModal');
+    }
+
+    function saveMenu() {
+      var id = document.getElementById('editMenuId').value;
+      var name = document.getElementById('menuName').value.trim();
+      var price = Number(document.getElementById('menuPrice').value);
+      var category = document.getElementById('menuCategory').value;
+      var desc = document.getElementById('menuDesc').value.trim();
+      var imageUrl = document.getElementById('menuImageUrl').value.trim();
+
+      if (!name) return Toast.error('Nama menu harus diisi');
+      if (!price || price <= 0) return Toast.error('Harga harus lebih dari 0');
+
+      var data = { name: name, price: price, category: category, description: desc, imageUrl: imageUrl };
+      Loader.show();
+      var call = id
+        ? gasCall('apiUpdateMenu', id, JSON.stringify(data))
+        : gasCall('apiCreateMenu', JSON.stringify(data));
+
+      call.then(function (res) {
+        Loader.hide();
+        if (res.success) {
+          Toast.success(id ? 'Menu diperbarui' : 'Menu ditambahkan');
+          closeModal('menuModal');
+          loadMenus();
+        } else {
+          Toast.error(res.error || 'Gagal menyimpan');
+        }
+      }).catch(function () { Loader.hide(); Toast.error('Terjadi kesalahan'); });
+    }
+
+    /* ── Toggle availability ── */
+    function toggleAvail(id) {
+      gasCall('apiToggleMenuAvailability', id).then(function (res) {
+        if (res.success) loadMenus();
+        else Toast.error('Gagal mengubah status');
+      });
+    }
+
+    /* ── Delete ── */
+    function openDeleteModal(id, name) {
+      document.getElementById('deleteMenuId').value = id;
+      document.getElementById('deleteMenuName').textContent = name;
+      openModal('deleteModal');
+    }
+
+    function confirmDelete() {
+      var id = document.getElementById('deleteMenuId').value;
+      Loader.show();
+      gasCall('apiDeleteMenu', id).then(function (res) {
+        Loader.hide();
+        if (res.success) {
+          Toast.success('Menu dihapus');
+          closeModal('deleteModal');
+          loadMenus();
+        } else {
+          Toast.error('Gagal menghapus menu');
+        }
+      }).catch(function () { Loader.hide(); Toast.error('Terjadi kesalahan'); });
+    }
+  </script>
 </body>
+
 </html>
