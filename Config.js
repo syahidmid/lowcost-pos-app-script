@@ -25,7 +25,6 @@ const CONFIG = {
 
   PAYMENT_METHODS: ['Cash', 'QRIS', 'Transfer'],
 
-  // Sheet column definitions (1-indexed)
   COLS: {
     MENU: {
       ID: 1,
@@ -45,6 +44,7 @@ const CONFIG = {
       TOTAL_AMOUNT: 5,
       PAYMENT_METHOD: 6,
       NOTES: 7,
+      CUSTOMER_NAME: 8,  // nama pelanggan + nomor meja, opsional
     },
     ORDER_ITEMS: {
       ID: 1,
@@ -62,7 +62,6 @@ const CONFIG = {
   },
 };
 
-// Default settings seed
 const DEFAULT_SETTINGS = {
   shop_name: 'My Coffee Shop',
   shop_address: 'Jl. Kopi No. 1',

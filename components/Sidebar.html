@@ -1,8 +1,11 @@
+<!-- ── Desktop Sidebar ── -->
 <aside class="sidebar">
   <div class="sidebar-logo">
-    <span class="logo-icon">☕</span>
-    <div class="logo-name" id="sidebarShopName">Brew POS</div>
-    <div class="logo-sub">POINT OF SALE</div>
+    <div class="logo-wordmark">
+      <span class="logo-dot"></span>
+      <span id="sidebarShopName">POS App</span>
+    </div>
+    <div class="logo-sub">Point of Sale</div>
   </div>
 
   <nav class="sidebar-nav">
@@ -22,20 +25,47 @@
 
   <div class="sidebar-footer">
     <div class="cashier-badge">
-      👤 Kasir: <span id="sidebarCashier">—</span>
+      <div class="cashier-avatar" id="cashierInitial">—</div>
+      <div>
+        <div class="cashier-name" id="sidebarCashier">—</div>
+        <div class="cashier-role">Kasir</div>
+      </div>
     </div>
   </div>
 </aside>
 
+<!-- ── Mobile Bottom Nav ── -->
+<nav class="bottom-nav">
+  <div class="bottom-nav-inner">
+    <a href="?page=home" class="bottom-nav-item <?= page === 'home' ? 'active' : '' ?>">
+      <span class="nav-icon">🏠</span>
+      <span>Kasir</span>
+    </a>
+    <a href="?page=analytics" class="bottom-nav-item <?= page === 'analytics' ? 'active' : '' ?>">
+      <span class="nav-icon">📊</span>
+      <span>Analitik</span>
+    </a>
+    <a href="?page=menu" class="bottom-nav-item <?= page === 'menu' ? 'active' : '' ?>">
+      <span class="nav-icon">🍽️</span>
+      <span>Menu</span>
+    </a>
+    <a href="?page=settings" class="bottom-nav-item <?= page === 'settings' ? 'active' : '' ?>">
+      <span class="nav-icon">⚙️</span>
+      <span>Setelan</span>
+    </a>
+  </div>
+</nav>
+
 <script>
-  // Populate sidebar dynamic info
   google.script.run
     .withSuccessHandler(json => {
       const s = JSON.parse(json);
       const shopEl = document.getElementById('sidebarShopName');
       const cashEl = document.getElementById('sidebarCashier');
+      const initEl = document.getElementById('cashierInitial');
       if (shopEl && s.shop_name) shopEl.textContent = s.shop_name;
       if (cashEl && s.cashier_name) cashEl.textContent = s.cashier_name;
+      if (initEl && s.cashier_name) initEl.textContent = s.cashier_name.charAt(0).toUpperCase();
     })
     .apiGetSettings();
 </script>
