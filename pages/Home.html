@@ -50,7 +50,7 @@
       border-bottom-color: var(--accent);
     }
 
-    /* ── Menu ── */
+    /* ── Menu area — takes all remaining height ── */
     .pos-main {
       flex: 1;
       display: flex;
@@ -145,79 +145,6 @@
       justify-content: center;
     }
 
-    /* ── Queue ── */
-    .queue-panel {
-      border-top: 1px solid var(--border);
-      background: var(--bg-2);
-      flex-shrink: 0;
-      max-height: 190px;
-      overflow-y: auto;
-    }
-
-    .queue-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 10px 16px;
-      border-bottom: 1px solid var(--border);
-      position: sticky;
-      top: 0;
-      background: var(--bg-2);
-    }
-
-    .queue-title {
-      font-family: var(--font-head);
-      font-size: 11.5px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.6px;
-      color: var(--text-3);
-    }
-
-    .queue-list {
-      display: flex;
-      gap: 10px;
-      padding: 10px 16px 14px;
-      flex-wrap: wrap;
-    }
-
-    .queue-card {
-      background: var(--bg-3);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 10px 12px;
-      min-width: 148px;
-      max-width: 196px;
-      flex: 1;
-    }
-
-    .queue-card-id {
-      font-size: 10.5px;
-      color: var(--text-3);
-      margin-bottom: 2px;
-      font-weight: 500;
-    }
-
-    .queue-card-customer {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 3px;
-    }
-
-    .queue-card-items {
-      font-size: 12px;
-      color: var(--text-2);
-      margin-bottom: 8px;
-      line-height: 1.4;
-    }
-
-    .queue-card-actions {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-
     /* ── Cart FAB ── */
     .cart-fab {
       display: none;
@@ -283,7 +210,6 @@
       overflow: hidden;
       position: fixed;
       bottom: var(--bottom-nav-h);
-      /* tepat di atas bottom nav */
       left: 0;
       right: 0;
       z-index: 450;
@@ -298,11 +224,6 @@
 
     .cart-panel.open {
       transform: translateY(0);
-    }
-
-    /* cart items scrollable, footer always visible */
-    .cart-items {
-      min-height: 0;
     }
 
     .cart-drag-handle {
@@ -332,6 +253,7 @@
       overflow-y: auto;
       padding: 10px 18px;
       -webkit-overflow-scrolling: touch;
+      min-height: 0;
     }
 
     .cart-item {
@@ -420,7 +342,6 @@
       text-align: center;
     }
 
-    /* ── Cart Footer ── */
     .cart-footer {
       padding: 14px 18px;
       border-top: 1px solid var(--border);
@@ -428,7 +349,6 @@
       background: var(--bg-2);
     }
 
-    /* Customer row — nama + meja side by side */
     .customer-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -524,7 +444,7 @@
       text-align: center;
     }
 
-    /* ── Checkout Confirm Modal ── */
+    /* ── Checkout Modal ── */
     .checkout-section {
       margin-bottom: 16px;
     }
@@ -573,7 +493,6 @@
       font-size: 20px;
     }
 
-    /* Payment pills */
     .payment-pills {
       display: flex;
       gap: 8px;
@@ -644,18 +563,6 @@
         transform: none;
       }
 
-      .queue-panel {
-        max-height: 230px;
-      }
-
-      .queue-header {
-        padding: 10px 24px;
-      }
-
-      .queue-list {
-        padding: 10px 24px 14px;
-      }
-
       .cart-fab {
         display: none !important;
       }
@@ -669,9 +576,9 @@
         transform: none !important;
         border-radius: 0;
         border: none;
+        bottom: unset;
         max-height: unset;
         height: 100%;
-        bottom: unset;
         box-shadow: none;
       }
 
@@ -721,13 +628,11 @@
             <div class="page-title">Kasir</div>
             <div class="page-subtitle" id="headerDate">—</div>
           </div>
-          <button class="btn btn-ghost btn-sm" onclick="refreshQueue()">↻ Refresh</button>
         </div>
       </div>
 
       <div class="home-body">
-
-        <!-- Menu + Queue -->
+        <!-- Menu -->
         <div class="pos-main">
           <div class="category-tabs">
             <div class="cat-tab active" onclick="switchTab('all',this)">Semua</div>
@@ -741,18 +646,6 @@
               <div class="empty-state" style="grid-column:1/-1">
                 <div class="spinner"></div>
                 <p style="margin-top:12px">Memuat menu...</p>
-              </div>
-            </div>
-          </div>
-
-          <div class="queue-panel">
-            <div class="queue-header">
-              <span class="queue-title">Antrian Aktif</span>
-              <span id="queueCount" class="badge badge-pending" style="display:none"></span>
-            </div>
-            <div class="queue-list" id="queueList">
-              <div class="empty-state" style="padding:14px 0;width:100%">
-                <p>Belum ada pesanan aktif</p>
               </div>
             </div>
           </div>
@@ -780,7 +673,6 @@
           </div>
 
           <div class="cart-footer">
-            <!-- Nama + Meja (opsional) — diisi sebelum checkout -->
             <div class="customer-row">
               <div>
                 <label class="form-label">Nama <span
@@ -793,7 +685,6 @@
                 <input type="text" class="form-control" id="tableNumber" placeholder="Meja 3">
               </div>
             </div>
-
             <div class="cart-summary-row">
               <span>Subtotal</span><span id="cartSubtotal">Rp 0</span>
             </div>
@@ -809,7 +700,6 @@
             </button>
           </div>
         </div>
-
       </div>
     </div>
   </div>
@@ -852,8 +742,6 @@
         <div class="modal-title">Konfirmasi Pesanan</div>
         <button class="modal-close" onclick="closeModal('checkoutModal')">✕</button>
       </div>
-
-      <!-- Customer info summary -->
       <div id="checkoutCustomerInfo"
         style="display:none;margin-bottom:14px;padding:10px 14px;background:var(--accent-dim);border-radius:var(--radius-sm);font-size:13px">
         <span
@@ -861,30 +749,22 @@
           untuk</span><br>
         <span id="checkoutCustomerLabel" style="font-weight:700;color:var(--text);font-size:14px"></span>
       </div>
-
-      <!-- Item list -->
       <div class="checkout-section">
         <div class="checkout-section-title">Ringkasan</div>
         <div id="checkoutItems"></div>
         <div class="checkout-total-row">
-          <span>Total</span>
-          <span id="checkoutTotal">Rp 0</span>
+          <span>Total</span><span id="checkoutTotal">Rp 0</span>
         </div>
       </div>
-
-      <!-- Payment method -->
       <div class="checkout-section" style="margin-bottom:20px">
         <div class="checkout-section-title">Metode Pembayaran</div>
         <div class="payment-pills" id="paymentPills"></div>
       </div>
-
-      <!-- Notes -->
       <div class="checkout-section" style="margin-bottom:22px">
         <div class="checkout-section-title">Catatan <span
             style="color:var(--text-3);font-weight:400;text-transform:none;letter-spacing:0">(opsional)</span></div>
         <input type="text" class="form-control" id="orderNotes" placeholder="Pisahkan meja, bawa sekaligus...">
       </div>
-
       <div class="flex gap-8">
         <button class="btn btn-ghost flex-1" onclick="closeModal('checkoutModal')">Batal</button>
         <button class="btn btn-primary flex-1" onclick="submitOrder()">Konfirmasi</button>
@@ -902,7 +782,6 @@
     let currentTab = 'all';
     let isMobile = false;
     let selectedPayment = 'Cash';
-
     const PAYMENT_OPTIONS = ['Cash', 'QRIS', 'Transfer'];
 
     window.addEventListener('load', () => {
@@ -913,7 +792,6 @@
       });
       loadSettings();
       loadMenus();
-      setInterval(refreshQueue, 30000);
     });
 
     function checkMobile() {
@@ -926,28 +804,16 @@
       updateFab();
     }
 
-    function openCartDrawer() {
-      document.getElementById('cartPanel').classList.add('open');
-      document.getElementById('cartDrawerOverlay').classList.add('open');
-    }
-    function closeCartDrawer() {
-      document.getElementById('cartPanel').classList.remove('open');
-      document.getElementById('cartDrawerOverlay').classList.remove('open');
-    }
+    function openCartDrawer() { document.getElementById('cartPanel').classList.add('open'); document.getElementById('cartDrawerOverlay').classList.add('open'); }
+    function closeCartDrawer() { document.getElementById('cartPanel').classList.remove('open'); document.getElementById('cartDrawerOverlay').classList.remove('open'); }
 
-    // ── Payment pills ──────────────────────────────────────────
     function renderPaymentPills() {
-      document.getElementById('paymentPills').innerHTML = PAYMENT_OPTIONS.map(p => `
-      <div class="payment-pill ${p === selectedPayment ? 'active' : ''}"
-           onclick="selectPayment('${p}')">${p}</div>
-    `).join('');
+      document.getElementById('paymentPills').innerHTML = PAYMENT_OPTIONS.map(p =>
+        `<div class="payment-pill ${p === selectedPayment ? 'active' : ''}" onclick="selectPayment('${p}')">${p}</div>`
+      ).join('');
     }
-    function selectPayment(method) {
-      selectedPayment = method;
-      renderPaymentPills();
-    }
+    function selectPayment(method) { selectedPayment = method; renderPaymentPills(); }
 
-    // ── Settings ───────────────────────────────────────────────
     function loadSettings() {
       gasCall('apiGetSettings').then(s => {
         taxRate = Number(s.tax_rate || 0);
@@ -957,12 +823,10 @@
       });
     }
 
-    // ── Menu ───────────────────────────────────────────────────
     function loadMenus() {
       gasCall('apiGetAvailableMenus').then(menus => {
         allMenus = menus;
         renderMenuGrid(currentTab);
-        refreshQueue();
       }).catch(() => Toast.error('Gagal memuat menu'));
     }
 
@@ -979,8 +843,7 @@
       grid.innerHTML = items.map(m => {
         const inCart = cart.find(c => c.menuId === m.id);
         return `
-        <div class="menu-card ${m.isAvailable ? '' : 'unavailable'}"
-             onclick="${m.isAvailable ? `openItemModal('${m.id}')` : ''}">
+        <div class="menu-card ${m.isAvailable ? '' : 'unavailable'}" onclick="${m.isAvailable ? `openItemModal('${m.id}')` : ''}">
           ${inCart ? `<div class="menu-card-badge">${inCart.qty}</div>` : ''}
           <div class="menu-card-icon">${menuEmoji(m.category)}</div>
           <div class="menu-card-cat">${m.category}</div>
@@ -997,7 +860,6 @@
       renderMenuGrid(tab);
     }
 
-    // ── Item Modal ─────────────────────────────────────────────
     function openItemModal(menuId) {
       const m = allMenus.find(x => x.id === menuId);
       if (!m) return;
@@ -1010,12 +872,10 @@
       document.getElementById('modalQty').textContent = existing ? existing.qty : 1;
       openModal('itemModal');
     }
-
     function modalQtyChange(delta) {
       const el = document.getElementById('modalQty');
       el.textContent = Math.max(1, Number(el.textContent) + delta);
     }
-
     function addToCart() {
       if (!selectedMenu) return;
       const qty = Number(document.getElementById('modalQty').textContent);
@@ -1028,7 +888,6 @@
       Toast.success(`${selectedMenu.name} ditambahkan`);
     }
 
-    // ── FAB ────────────────────────────────────────────────────
     function updateFab() {
       const fab = document.getElementById('cartFab');
       const count = document.getElementById('cartFabCount');
@@ -1037,7 +896,6 @@
       fab.style.display = (isMobile && total > 0) ? 'flex' : 'none';
     }
 
-    // ── Cart ───────────────────────────────────────────────────
     function renderCart() {
       const el = document.getElementById('cartItems');
       if (!cart.length) {
@@ -1066,14 +924,8 @@
       updateTotals(); updateFab();
     }
 
-    function cartQty(idx, delta) {
-      cart[idx].qty = Math.max(1, cart[idx].qty + delta);
-      renderCart(); renderMenuGrid(currentTab);
-    }
-    function removeFromCart(idx) {
-      cart.splice(idx, 1);
-      renderCart(); renderMenuGrid(currentTab);
-    }
+    function cartQty(idx, delta) { cart[idx].qty = Math.max(1, cart[idx].qty + delta); renderCart(); renderMenuGrid(currentTab); }
+    function removeFromCart(idx) { cart.splice(idx, 1); renderCart(); renderMenuGrid(currentTab); }
     function clearCart() {
       cart = [];
       document.getElementById('customerName').value = '';
@@ -1089,24 +941,14 @@
       document.getElementById('cartTotal').textContent = formatIDR(sub + tax);
     }
 
-    // ── Checkout ───────────────────────────────────────────────
     function checkout() {
       if (!cart.length) return;
-
       const customerName = document.getElementById('customerName').value.trim();
       const tableNumber = document.getElementById('tableNumber').value.trim();
       const customerLabel = [customerName, tableNumber].filter(Boolean).join(' · ');
-
-      // Show customer info in modal if filled
       const infoEl = document.getElementById('checkoutCustomerInfo');
-      if (customerLabel) {
-        document.getElementById('checkoutCustomerLabel').textContent = customerLabel;
-        infoEl.style.display = 'block';
-      } else {
-        infoEl.style.display = 'none';
-      }
-
-      // Render item list
+      if (customerLabel) { document.getElementById('checkoutCustomerLabel').textContent = customerLabel; infoEl.style.display = 'block'; }
+      else infoEl.style.display = 'none';
       const sub = cart.reduce((s, i) => s + i.unitPrice * i.qty, 0);
       const tax = sub * (taxRate / 100);
       document.getElementById('checkoutItems').innerHTML = cart.map(i => `
@@ -1115,12 +957,9 @@
         <span>${formatIDR(i.unitPrice * i.qty)}</span>
       </div>`).join('');
       document.getElementById('checkoutTotal').textContent = formatIDR(sub + tax);
-
-      // Reset fields
       document.getElementById('orderNotes').value = '';
       selectedPayment = 'Cash';
       renderPaymentPills();
-
       if (isMobile) closeCartDrawer();
       openModal('checkoutModal');
     }
@@ -1129,7 +968,6 @@
       const customerName = document.getElementById('customerName').value.trim();
       const tableNumber = document.getElementById('tableNumber').value.trim();
       const customerLabel = [customerName, tableNumber].filter(Boolean).join(' · ');
-
       const payload = {
         items: cart.map(({ menuId, menuName, qty, unitPrice }) => ({ menuId, menuName, qty, unitPrice })),
         paymentMethod: selectedPayment,
@@ -1137,7 +975,6 @@
         cashierName: cashier,
         customerName: customerLabel,
       };
-
       closeModal('checkoutModal');
       Loader.show();
       gasCall('apiCreateOrder', JSON.stringify(payload)).then(res => {
@@ -1145,43 +982,9 @@
         if (res.success) {
           const label = customerLabel ? ` untuk ${customerLabel}` : '';
           Toast.success(`Pesanan${label} berhasil dibuat!`);
-          clearCart(); refreshQueue();
+          clearCart();
         } else Toast.error('Gagal: ' + res.error);
       }).catch(() => { Loader.hide(); Toast.error('Terjadi kesalahan'); });
-    }
-
-    // ── Queue ──────────────────────────────────────────────────
-    function refreshQueue() {
-      gasCall('apiGetActiveOrders').then(orders => {
-        const el = document.getElementById('queueList');
-        const badge = document.getElementById('queueCount');
-        if (!orders.length) {
-          el.innerHTML = `<div class="empty-state" style="padding:14px 0;width:100%"><p>Belum ada pesanan aktif</p></div>`;
-          badge.style.display = 'none'; return;
-        }
-        badge.style.display = 'inline-flex';
-        badge.textContent = orders.length + ' pesanan';
-        el.innerHTML = orders.map(o => {
-          // customerName bisa "Budi · Meja 3", "Meja 3", atau kosong
-          const customer = o.customerName || '<span style="color:var(--text-3);font-weight:400;font-size:11px">Tanpa nama</span>';
-          return `
-          <div class="queue-card">
-            <div class="queue-card-id">#${o.orderId.split('-')[1] || o.orderId}</div>
-            <div class="queue-card-customer">${customer}</div>
-            <div class="queue-card-items">${o.items.map(i => `${i.qty}× ${i.menuName}`).join(', ')}</div>
-            <div style="margin-bottom:7px">${statusBadge(o.status)}</div>
-            <div class="queue-card-actions">
-              ${o.status === 'pending' ? `<button class="btn btn-sm" style="background:var(--amber-bg);color:var(--amber);border:1px solid rgba(217,119,6,0.2)" onclick="updateStatus('${o.orderId}','preparing')">Proses</button>` : ''}
-              ${o.status === 'preparing' ? `<button class="btn btn-success btn-sm" onclick="updateStatus('${o.orderId}','done')">Selesai</button>` : ''}
-              <button class="btn btn-danger btn-sm" onclick="updateStatus('${o.orderId}','cancelled')">Batal</button>
-            </div>
-          </div>`;
-        }).join('');
-      });
-    }
-
-    function updateStatus(orderId, status) {
-      gasCall('apiUpdateOrderStatus', orderId, status).then(() => refreshQueue());
     }
   </script>
 </body>

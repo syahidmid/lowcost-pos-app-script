@@ -12,6 +12,9 @@
     <a href="?page=home" class="nav-item <?= page === 'home' ? 'active' : '' ?>">
       <span class="nav-icon">🏠</span> Kasir
     </a>
+    <a href="?page=queue" class="nav-item <?= page === 'queue' ? 'active' : '' ?>">
+      <span class="nav-icon">🔔</span> Antrian
+    </a>
     <a href="?page=analytics" class="nav-item <?= page === 'analytics' ? 'active' : '' ?>">
       <span class="nav-icon">📊</span> Analitik
     </a>
@@ -41,6 +44,10 @@
       <span class="nav-icon">🏠</span>
       <span>Kasir</span>
     </a>
+    <a href="?page=queue" class="bottom-nav-item <?= page === 'queue' ? 'active' : '' ?>">
+      <span class="nav-icon">🔔</span>
+      <span>Antrian</span>
+    </a>
     <a href="?page=analytics" class="bottom-nav-item <?= page === 'analytics' ? 'active' : '' ?>">
       <span class="nav-icon">📊</span>
       <span>Analitik</span>
@@ -58,14 +65,17 @@
 
 <script>
   google.script.run
-    .withSuccessHandler(json => {
-      const s = JSON.parse(json);
-      const shopEl = document.getElementById('sidebarShopName');
-      const cashEl = document.getElementById('sidebarCashier');
-      const initEl = document.getElementById('cashierInitial');
+    .withSuccessHandler(function (json) {
+      var s = JSON.parse(json);
+      var shopEl = document.getElementById('sidebarShopName');
+      var cashEl = document.getElementById('sidebarCashier');
+      var initEl = document.getElementById('cashierInitial');
       if (shopEl && s.shop_name) shopEl.textContent = s.shop_name;
       if (cashEl && s.cashier_name) cashEl.textContent = s.cashier_name;
       if (initEl && s.cashier_name) initEl.textContent = s.cashier_name.charAt(0).toUpperCase();
+    })
+    .withFailureHandler(function (err) {
+      console.warn('Sidebar settings error:', err);
     })
     .apiGetSettings();
 </script>
