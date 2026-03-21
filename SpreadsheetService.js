@@ -4,8 +4,14 @@
 
 const SpreadsheetService = (() => {
 
+  // ── FIX: helper biar ga null waktu jalan sebagai Web App ──
+  function getSpreadsheet() {
+    return SpreadsheetApp.getActiveSpreadsheet()
+      || SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+  }
+
   function getOrCreateSheet(name, headers) {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getSpreadsheet(); // ← ganti semua getActiveSpreadsheet()
     let sheet = ss.getSheetByName(name);
     if (!sheet) {
       sheet = ss.insertSheet(name);
@@ -49,7 +55,7 @@ const SpreadsheetService = (() => {
   // ── Generic read ──────────────────────────────────────────
 
   function getAllRows(sheetName) {
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
+    const sheet = getSpreadsheet().getSheetByName(sheetName);
     if (!sheet) return [];
     const lastRow = sheet.getLastRow();
     if (lastRow < 2) return [];
@@ -64,13 +70,13 @@ const SpreadsheetService = (() => {
   // ── Generic write ─────────────────────────────────────────
 
   function appendRow(sheetName, rowData) {
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
+    const sheet = getSpreadsheet().getSheetByName(sheetName);
     if (!sheet) throw new Error(`Sheet "${sheetName}" not found`);
     sheet.appendRow(rowData);
   }
 
   function updateRow(sheetName, idCol, id, newRowData) {
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
+    const sheet = getSpreadsheet().getSheetByName(sheetName);
     if (!sheet) return false;
     const data = sheet.getDataRange().getValues();
     for (let i = 1; i < data.length; i++) {
@@ -83,7 +89,7 @@ const SpreadsheetService = (() => {
   }
 
   function deleteRow(sheetName, idCol, id) {
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
+    const sheet = getSpreadsheet().getSheetByName(sheetName);
     if (!sheet) return false;
     const data = sheet.getDataRange().getValues();
     for (let i = data.length - 1; i >= 1; i--) {
@@ -96,7 +102,7 @@ const SpreadsheetService = (() => {
   }
 
   function updateCellByKey(sheetName, keyCol, key, valueCol, value) {
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
+    const sheet = getSpreadsheet().getSheetByName(sheetName);
     if (!sheet) return false;
     const data = sheet.getDataRange().getValues();
     for (let i = 1; i < data.length; i++) {
@@ -105,7 +111,6 @@ const SpreadsheetService = (() => {
         return true;
       }
     }
-    // If key not found, append
     sheet.appendRow([key, value]);
     return true;
   }

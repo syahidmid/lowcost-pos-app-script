@@ -5,6 +5,7 @@
 const CONFIG = {
   APP_NAME: 'Brew POS',
   VERSION: '1.0.0',
+  SPREADSHEET_ID: '1BAWdsU9x8zA555YSr9HbbJnIXkypVVLulR78W4VWrM8',
 
   SHEETS: {
     MENU: 'Menu',
