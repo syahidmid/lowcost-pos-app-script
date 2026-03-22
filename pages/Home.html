@@ -579,9 +579,10 @@
       background: var(--bg-2);
     }
 
+    /* CHANGED: from grid 2-col to flex column (2 baris) */
     .customer-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
+      display: flex;
+      flex-direction: column;
       gap: 8px;
       margin-bottom: 12px;
     }
@@ -998,10 +999,10 @@
             </div>
           </div>
           <div class="cart-footer">
+            <!-- CHANGED: 2 baris (flex column), nama wajib -->
             <div class="customer-row">
               <div>
-                <label class="form-label">Nama <span
-                    style="color:var(--text-3);font-weight:400;text-transform:none">(opsional)</span></label>
+                <label class="form-label">Nama <span style="color:var(--red)">*</span></label>
                 <input type="text" class="form-control" id="customerName" placeholder="Nama pelanggan">
               </div>
               <div>
@@ -1160,20 +1161,6 @@
         document.getElementById('taxPct').textContent = taxRate;
       });
     }
-
-    /* ══════════════════════════════════════
-       QUEUE
-    ══════════════════════════════════════ */
-
-
-
-
-
-
-
-
-
-
 
     /* ══════════════════════════════════════
        QUEUE
@@ -1394,7 +1381,15 @@
     /* ── Checkout ── */
     function checkout() {
       if (!cart.length) return;
+
+      // VALIDATION: nama wajib diisi
       var customerName = document.getElementById('customerName').value.trim();
+      if (!customerName) {
+        Toast.error('Nama pelanggan wajib diisi');
+        document.getElementById('customerName').focus();
+        return;
+      }
+
       var tableNumber = document.getElementById('tableNumber').value.trim();
       var customerLabel = [customerName, tableNumber].filter(Boolean).join(' · ');
       var infoEl = document.getElementById('checkoutCustomerInfo');

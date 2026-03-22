@@ -53,7 +53,7 @@ components/
 ## TODO
 
 ### Refactor
-- [ ] Buat `components/OrderCard.html` — shared JS component untuk render order card (dipakai di Home + Queue)
+- [x] Buat `components/OrderCard.html` — shared JS component untuk render order card (dipakai di Home + Queue)
   - [ ] Tombol **Edit Pesanan** di order card — bisa tambah item baru ke order yang sudah ada (status pending/preparing)
   - [ ] Edit pesanan bisa dipanggil dari tab Antrian di Home maupun halaman Queue
 - [ ] Migrasi navigasi ke SPA (show/hide div) untuk performa lebih smooth
