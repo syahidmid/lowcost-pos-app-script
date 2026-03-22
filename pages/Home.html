@@ -1093,6 +1093,7 @@
   </div>
 
   <?!= include('components/Scripts') ?>
+  <?!= include('components/OrderCard') ?>
   <script>
     var allMenus = [];
     var allOrders = [];
@@ -1163,25 +1164,35 @@
     /* ══════════════════════════════════════
        QUEUE
     ══════════════════════════════════════ */
+
+
+
+
+
+
+
+
+
+
+
+    /* ══════════════════════════════════════
+       QUEUE
+    ══════════════════════════════════════ */
     function loadQueue() {
       gasCall('apiGetActiveOrders').then(function (orders) {
         allOrders = orders;
         updateQueueBadges();
         renderQueueGrid();
-      });
+      }).catch(function () { Toast.error('Gagal memuat antrian'); });
     }
 
     function updateQueueBadges() {
       var total = allOrders.length;
       var pending = allOrders.filter(function (o) { return o.status === 'pending'; }).length;
       var preparing = allOrders.filter(function (o) { return o.status === 'preparing'; }).length;
-
-      // Main tab badge
       var badge = document.getElementById('queueBadge');
       badge.textContent = total;
       badge.classList.toggle('visible', total > 0);
-
-      // Queue pill counts
       document.getElementById('qcount-all').textContent = total;
       document.getElementById('qcount-pending').textContent = pending;
       document.getElementById('qcount-preparing').textContent = preparing;
@@ -1199,74 +1210,17 @@
       var filtered = currentQFilter === 'all'
         ? allOrders
         : allOrders.filter(function (o) { return o.status === currentQFilter; });
-
       if (!filtered.length) {
         grid.innerHTML = '<div class="empty-state"><span class="empty-icon">🎉</span><p>Tidak ada pesanan ' + (currentQFilter === 'all' ? 'aktif' : currentQFilter) + '</p></div>';
         return;
       }
-
       grid.innerHTML = filtered.map(function (o) {
-        var customer = o.customerName || '<span style="color:var(--text-3);font-weight:400;font-size:12px">Tanpa nama</span>';
-        var timeAgo = getTimeAgo(o.createdAt);
-        var chips = o.items.map(function (i) {
-          var descStr = '';
-          if (i.description) {
-            try {
-              var d = JSON.parse(i.description);
-              var parts = [];
-              if (d.options) Object.keys(d.options).forEach(function (k) { if (d.options[k]) parts.push(d.options[k]); });
-              if (d.notes) parts.push(d.notes);
-              if (parts.length) descStr = parts.join(' · ');
-            } catch (e) { }
-          }
-          return '<div class="qcard-chip"><strong>' + i.qty + '×</strong> ' + i.menuName +
-            (descStr ? '<div class="qcard-chip-desc">' + descStr + '</div>' : '') + '</div>';
-        }).join('');
-        var total = o.items.reduce(function (s, i) { return s + i.unitPrice * i.qty; }, 0);
-
-        return '<div class="qcard status-' + o.status + '" id="qcard-' + o.orderId + '">' +
-          '<div class="qcard-top">' +
-          '<div>' +
-          '<div class="qcard-id">#' + (o.orderId.split('-')[1] || o.orderId) + '</div>' +
-          '<div class="qcard-customer">' + customer + '</div>' +
-          '</div>' +
-          '<div style="text-align:right">' +
-          statusBadge(o.status) +
-          '<div class="qcard-time">' + timeAgo + '</div>' +
-          '</div>' +
-          '</div>' +
-          '<div class="qcard-items">' + chips + '</div>' +
-          '<div class="qcard-footer">' +
-          '<div class="qcard-total">' + formatIDR(total) + '</div>' +
-          '<div class="qcard-actions">' +
-          (o.status === 'pending' ? '<button class="btn btn-sm" style="background:var(--amber-bg);color:var(--amber);border:1px solid rgba(217,119,6,0.2)" onclick="updateQueueStatus(\'' + o.orderId + '\',\'preparing\')">Proses</button>' : '') +
-          (o.status === 'preparing' ? '<button class="btn btn-success btn-sm" onclick="updateQueueStatus(\'' + o.orderId + '\',\'done\')">Selesai</button>' : '') +
-          '<button class="btn btn-danger btn-sm" onclick="updateQueueStatus(\'' + o.orderId + '\',\'cancelled\')">Batal</button>' +
-          '</div>' +
-          '</div>' +
-          '</div>';
+        return renderOrderCard(o, 'homeUpdateQueueStatus', 'openEditOrder');
       }).join('');
     }
 
-    function updateQueueStatus(orderId, status) {
-      var card = document.getElementById('qcard-' + orderId);
-      if (card) card.style.opacity = '0.5';
-      gasCall('apiUpdateOrderStatus', orderId, status).then(function () {
-        loadQueue();
-        var labels = { preparing: 'Diproses', done: 'Selesai!', cancelled: 'Dibatalkan' };
-        Toast.success('Pesanan ' + (labels[status] || status));
-      }).catch(function () {
-        if (card) card.style.opacity = '1';
-        Toast.error('Gagal update status');
-      });
-    }
-
-    function getTimeAgo(isoString) {
-      if (!isoString) return '';
-      var diff = Math.floor((Date.now() - new Date(isoString)) / 1000);
-      if (diff < 60) return diff + 'd lalu';
-      if (diff < 3600) return Math.floor(diff / 60) + 'm lalu';
-      return Math.floor(diff / 3600) + 'j lalu';
+    function homeUpdateQueueStatus(orderId, status) {
+      updateOrderStatus(orderId, status, loadQueue);
     }
 
     /* ══════════════════════════════════════

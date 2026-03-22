@@ -54,6 +54,7 @@ function apiCreateOrder(payloadJson) { return JSON.stringify(OrderService.create
 function apiGetActiveOrders() { return JSON.stringify(OrderService.getActiveOrdersWithItems()); }
 function apiUpdateOrderStatus(orderId, status) { return JSON.stringify(OrderService.updateStatus(orderId, status)); }
 function apiCancelOrder(orderId) { return JSON.stringify(OrderService.cancelOrder(orderId)); }
+function apiUpdateOrderItems(orderId, payloadJson) { return JSON.stringify(OrderService.updateOrderItems(orderId, JSON.parse(payloadJson))); }
 function apiGetOrderWithItems(orderId) { return JSON.stringify(OrderService.getOrderWithItems(orderId)); }
 
 // ── Analytics API ─────────────────────────────────────────

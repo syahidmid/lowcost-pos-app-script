@@ -1,0 +1,542 @@
+<!-- ============================================================
+     components/OrderCard.html
+     Shared order card component — include di Home dan Queue
+     Provides: CSS, renderOrderCard(), updateOrderStatus(),
+               confirmCancel(), getTimeAgo(), openEditOrder()
+============================================================ -->
+
+<style>
+  /* ── Order Card ── */
+  .qcard {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition);
+  }
+
+  .qcard.status-pending {
+    border-left: 3px solid var(--blue);
+  }
+
+  .qcard.status-preparing {
+    border-left: 3px solid var(--amber);
+  }
+
+  .qcard-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .qcard-id {
+    font-size: 10.5px;
+    color: var(--text-3);
+    font-weight: 500;
+    margin-bottom: 2px;
+  }
+
+  .qcard-customer {
+    font-family: var(--font-head);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .qcard-time {
+    font-size: 11px;
+    color: var(--text-3);
+    white-space: nowrap;
+    margin-top: 4px;
+  }
+
+  .qcard-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  .qcard-item-chip {
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xs);
+    padding: 4px 8px;
+    font-size: 12px;
+    color: var(--text-2);
+    font-weight: 500;
+  }
+
+  .qcard-item-chip strong {
+    color: var(--text);
+    font-weight: 700;
+  }
+
+  .qcard-item-desc {
+    font-size: 11px;
+    color: var(--accent);
+    margin-top: 2px;
+    font-weight: 500;
+  }
+
+  .qcard-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .qcard-total {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .qcard-actions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  /* ── Edit Order Modal ── */
+  .edit-order-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .edit-order-item:last-child {
+    border-bottom: none;
+  }
+
+  .edit-order-item-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .edit-order-item-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .edit-order-item-opts {
+    font-size: 12px;
+    color: var(--text-3);
+    margin-top: 2px;
+  }
+
+  .edit-order-item-price {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    white-space: nowrap;
+  }
+
+  .edit-qty-ctrl {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+  }
+
+  .edit-qty-btn {
+    width: 26px;
+    height: 26px;
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xs);
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text);
+    transition: var(--transition);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .edit-qty-btn:active {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .edit-qty-val {
+    font-size: 13px;
+    font-weight: 700;
+    min-width: 20px;
+    text-align: center;
+  }
+
+  .edit-order-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    margin-top: 4px;
+    border-top: 2px solid var(--border);
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .edit-order-total span:last-child {
+    color: var(--accent);
+    font-family: var(--font-head);
+  }
+
+  /* Add items section in edit modal */
+  .edit-add-section {
+    margin-top: 16px;
+  }
+
+  .edit-add-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+  }
+
+  .edit-menu-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    max-height: 220px;
+    overflow-y: auto;
+  }
+
+  .edit-menu-item {
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px;
+    cursor: pointer;
+    transition: var(--transition);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .edit-menu-item:active {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+  }
+
+  .edit-menu-item-name {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+
+  .edit-menu-item-price {
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 600;
+  }
+</style>
+
+<!-- ── Edit Order Modal ── -->
+<div class="modal-overlay" id="editOrderModal" onclick="closeModalOnOverlay(event,'editOrderModal')">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Edit Pesanan</div>
+        <div id="editOrderCustomer" style="font-size:13px;color:var(--text-3);margin-top:2px"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal('editOrderModal')">✕</button>
+    </div>
+
+    <!-- Existing items -->
+    <div
+      style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">
+      Item Saat Ini
+    </div>
+    <div id="editOrderItems"></div>
+    <div class="edit-order-total">
+      <span>Total</span>
+      <span id="editOrderTotal">Rp 0</span>
+    </div>
+
+    <!-- Add new items -->
+    <div class="edit-add-section">
+      <div class="edit-add-title">Tambah Item</div>
+      <div class="edit-menu-grid" id="editMenuGrid"></div>
+    </div>
+
+    <div class="flex gap-8" style="margin-top:20px">
+      <button class="btn btn-ghost flex-1" onclick="closeModal('editOrderModal')">Batal</button>
+      <button class="btn btn-primary flex-1" onclick="submitEditOrder()">Simpan Perubahan</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── State for edit order ──────────────────────────────────
+  var _editOrderId = null;
+  var _editOrderItems = []; // [{ menuId, menuName, qty, unitPrice, notes, selectedOptions, emoji }]
+  var _allMenusRef = [];  // reference to allMenus from parent page
+
+  // ── Shared helpers ────────────────────────────────────────
+
+  function getTimeAgo(isoString) {
+    if (!isoString) return '';
+    var diff = Math.floor((Date.now() - new Date(isoString)) / 1000);
+    if (diff < 60) return diff + 'd lalu';
+    if (diff < 3600) return Math.floor(diff / 60) + 'm lalu';
+    return Math.floor(diff / 3600) + 'j lalu';
+  }
+
+  function parseItemDesc(description) {
+    if (!description) return '';
+    try {
+      var d = JSON.parse(description);
+      var parts = [];
+      if (d.options) Object.keys(d.options).forEach(function (k) { if (d.options[k]) parts.push(d.options[k]); });
+      if (d.notes) parts.push(d.notes);
+      return parts.join(' · ');
+    } catch (e) { return ''; }
+  }
+
+  // ── Render order card HTML (returns string) ───────────────
+
+  function renderOrderCard(o, onUpdateStatus, onEdit) {
+    var customer = o.customerName ||
+      '<span style="color:var(--text-3);font-weight:400;font-size:12px">Tanpa nama</span>';
+    var timeAgo = getTimeAgo(o.createdAt);
+
+    var chips = o.items.map(function (i) {
+      var descStr = parseItemDesc(i.description);
+      return '<div class="qcard-item-chip">' +
+        '<strong>' + i.qty + '×</strong> ' + i.menuName +
+        (descStr ? '<div class="qcard-item-desc">' + descStr + '</div>' : '') +
+        '</div>';
+    }).join('');
+
+    var total = o.items.reduce(function (s, i) { return s + i.unitPrice * i.qty; }, 0);
+
+    // Action buttons — Edit hanya untuk pending/preparing
+    var canEdit = o.status === 'pending' || o.status === 'preparing';
+    var updateFn = onUpdateStatus || 'updateOrderStatus';
+    var editFn = onEdit || 'openEditOrder';
+
+    var actions =
+      (o.status === 'pending'
+        ? '<button class="btn btn-sm" style="background:var(--amber-bg);color:var(--amber);border:1px solid rgba(217,119,6,0.2)" ' +
+        'onclick="' + updateFn + '(\'' + o.orderId + '\',\'preparing\')">Proses</button>'
+        : '') +
+      (o.status === 'preparing'
+        ? '<button class="btn btn-success btn-sm" onclick="' + updateFn + '(\'' + o.orderId + '\',\'done\')">Selesai</button>'
+        : '') +
+      (canEdit
+        ? '<button class="btn btn-ghost btn-sm" onclick="' + editFn + '(\'' + o.orderId + '\')">✏️ Edit</button>'
+        : '') +
+      '<button class="btn btn-danger btn-sm" onclick="confirmCancel(\'' + o.orderId + '\')">Batal</button>';
+
+    return '<div class="qcard status-' + o.status + '" id="qcard-' + o.orderId + '">' +
+      '<div class="qcard-top">' +
+      '<div>' +
+      '<div class="qcard-id">#' + (o.orderId.split('-')[1] || o.orderId) + '</div>' +
+      '<div class="qcard-customer">' + customer + '</div>' +
+      '</div>' +
+      '<div style="text-align:right">' +
+      statusBadge(o.status) +
+      '<div class="qcard-time">' + timeAgo + '</div>' +
+      '</div>' +
+      '</div>' +
+      '<div class="qcard-items">' + chips + '</div>' +
+      '<div class="qcard-footer">' +
+      '<div class="qcard-total">' + formatIDR(total) + '</div>' +
+      '<div class="qcard-actions">' + actions + '</div>' +
+      '</div>' +
+      '</div>';
+  }
+
+  // ── Status update ─────────────────────────────────────────
+
+  function updateOrderStatus(orderId, status, onDone) {
+    var card = document.getElementById('qcard-' + orderId);
+    if (card) card.style.opacity = '0.5';
+    gasCall('apiUpdateOrderStatus', orderId, status).then(function () {
+      var labels = { preparing: 'Diproses', done: 'Selesai!', cancelled: 'Dibatalkan' };
+      Toast.success('Pesanan ' + (labels[status] || status));
+      if (typeof onDone === 'function') onDone();
+    }).catch(function () {
+      if (card) card.style.opacity = '1';
+      Toast.error('Gagal update status');
+    });
+  }
+
+  function confirmCancel(orderId) {
+    if (confirm('Batalkan pesanan ini?')) {
+      updateOrderStatus(orderId, 'cancelled', function () {
+        // Trigger reload — each page defines its own reload function
+        if (typeof loadQueue === 'function') loadQueue();
+      });
+    }
+  }
+
+  // ── Edit Order ────────────────────────────────────────────
+
+  function openEditOrder(orderId) {
+    // Get full order data
+    Loader.show();
+    gasCall('apiGetOrderWithItems', orderId).then(function (order) {
+      Loader.hide();
+      if (!order) return Toast.error('Order tidak ditemukan');
+
+      _editOrderId = orderId;
+
+      // Clone items into edit state
+      _editOrderItems = order.items.map(function (i) {
+        var descObj = {};
+        try { if (i.description) descObj = JSON.parse(i.description); } catch (e) { }
+        return {
+          menuId: i.menuId,
+          menuName: i.menuName,
+          qty: i.qty,
+          unitPrice: i.unitPrice,
+          notes: descObj.notes || '',
+          selectedOptions: descObj.options || {},
+          emoji: '🍽️',
+        };
+      });
+
+      // Customer info
+      var customerLabel = order.customerName || 'Tanpa nama';
+      document.getElementById('editOrderCustomer').textContent =
+        '👤 ' + customerLabel + ' · #' + (orderId.split('-')[1] || orderId);
+
+      // Render
+      renderEditItems();
+      renderEditMenuGrid();
+      openModal('editOrderModal');
+    }).catch(function () {
+      Loader.hide();
+      Toast.error('Gagal memuat pesanan');
+    });
+  }
+
+  function renderEditItems() {
+    var container = document.getElementById('editOrderItems');
+    if (!_editOrderItems.length) {
+      container.innerHTML = '<div class="empty-state" style="padding:20px 0"><p>Tidak ada item</p></div>';
+      updateEditTotal();
+      return;
+    }
+    container.innerHTML = _editOrderItems.map(function (item, idx) {
+      var optStr = Object.values(item.selectedOptions || {}).filter(Boolean).join(' · ');
+      if (item.notes) optStr = optStr ? optStr + ' · ' + item.notes : item.notes;
+      return '<div class="edit-order-item">' +
+        '<div class="edit-order-item-info">' +
+        '<div class="edit-order-item-name">' + item.menuName + '</div>' +
+        (optStr ? '<div class="edit-order-item-opts">' + optStr + '</div>' : '') +
+        '<div class="edit-qty-ctrl">' +
+        '<div class="edit-qty-btn" onclick="editItemQty(' + idx + ',-1)">−</div>' +
+        '<div class="edit-qty-val" id="edit-qty-' + idx + '">' + item.qty + '</div>' +
+        '<div class="edit-qty-btn" onclick="editItemQty(' + idx + ',1)">+</div>' +
+        '<button class="btn btn-danger btn-sm" style="margin-left:4px;padding:2px 8px" onclick="removeEditItem(' + idx + ')">✕</button>' +
+        '</div>' +
+        '</div>' +
+        '<div class="edit-order-item-price">' + formatIDR(item.unitPrice * item.qty) + '</div>' +
+        '</div>';
+    }).join('');
+    updateEditTotal();
+  }
+
+  function renderEditMenuGrid() {
+    var grid = document.getElementById('editMenuGrid');
+    // Use allMenus from parent page — set via _allMenusRef or window.allMenus
+    var menus = (typeof allMenus !== 'undefined' ? allMenus : []).filter(function (m) { return m.isAvailable; });
+    if (!menus.length) {
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--text-3);font-size:13px;padding:16px">Menu tidak tersedia</div>';
+      return;
+    }
+    var CAT_EMOJI = { Coffee: '☕', 'No Coffee': '🥤', Snack: '🍩' };
+    grid.innerHTML = menus.map(function (m) {
+      return '<div class="edit-menu-item" onclick="addEditItem(\'' + m.id + '\')">' +
+        '<div class="edit-menu-item-name">' + (CAT_EMOJI[m.category] || '🍽️') + ' ' + m.name + '</div>' +
+        '<div class="edit-menu-item-price">' + formatIDR(m.price) + '</div>' +
+        '</div>';
+    }).join('');
+  }
+
+  function editItemQty(idx, delta) {
+    var newQty = Math.max(1, _editOrderItems[idx].qty + delta);
+    _editOrderItems[idx].qty = newQty;
+    document.getElementById('edit-qty-' + idx).textContent = newQty;
+    // Update subtotal display
+    var items = document.querySelectorAll('.edit-order-item-price');
+    if (items[idx]) items[idx].textContent = formatIDR(_editOrderItems[idx].unitPrice * newQty);
+    updateEditTotal();
+  }
+
+  function removeEditItem(idx) {
+    _editOrderItems.splice(idx, 1);
+    renderEditItems();
+  }
+
+  function addEditItem(menuId) {
+    var menus = typeof allMenus !== 'undefined' ? allMenus : [];
+    var m = menus.find(function (x) { return x.id === menuId; });
+    if (!m) return;
+    // Check if already in list — increase qty
+    var existing = _editOrderItems.find(function (i) { return i.menuId === menuId; });
+    if (existing) {
+      existing.qty++;
+    } else {
+      var CAT_EMOJI = { Coffee: '☕', 'No Coffee': '🥤', Snack: '🍩' };
+      _editOrderItems.push({
+        menuId: m.id,
+        menuName: m.name,
+        qty: 1,
+        unitPrice: m.price,
+        notes: '',
+        selectedOptions: {},
+        emoji: CAT_EMOJI[m.category] || '🍽️',
+      });
+    }
+    renderEditItems();
+    Toast.info(m.name + ' ditambahkan');
+  }
+
+  function updateEditTotal() {
+    var total = _editOrderItems.reduce(function (s, i) { return s + i.unitPrice * i.qty; }, 0);
+    document.getElementById('editOrderTotal').textContent = formatIDR(total);
+  }
+
+  function submitEditOrder() {
+    if (!_editOrderId) return;
+    if (!_editOrderItems.length) return Toast.error('Minimal 1 item');
+
+    var payload = {
+      items: _editOrderItems.map(function (i) {
+        return {
+          menuId: i.menuId,
+          menuName: i.menuName,
+          qty: i.qty,
+          unitPrice: i.unitPrice,
+          notes: i.notes || '',
+          selectedOptions: i.selectedOptions || {},
+        };
+      }),
+    };
+
+    closeModal('editOrderModal');
+    Loader.show();
+    gasCall('apiUpdateOrderItems', _editOrderId, JSON.stringify(payload)).then(function (res) {
+      Loader.hide();
+      if (res.success) {
+        Toast.success('Pesanan diperbarui');
+        if (typeof loadQueue === 'function') loadQueue();
+      } else {
+        Toast.error('Gagal: ' + (res.error || 'Unknown error'));
+      }
+    }).catch(function () { Loader.hide(); Toast.error('Terjadi kesalahan'); });
+  }
+</script>

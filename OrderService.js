@@ -174,6 +174,65 @@ const OrderService = (() => {
     return updateStatus(orderId, CONFIG.ORDER_STATUS.CANCELLED);
   }
 
+  /**
+   * Update items of an existing order (replace all items + recalculate total)
+   * @param {string} orderId
+   * @param {Object} payload - { items: [{menuId, menuName, qty, unitPrice, notes, selectedOptions}] }
+   */
+  function updateOrderItems(orderId, payload) {
+    try {
+      const existing = getOrderById(orderId);
+      if (!existing) return { success: false, error: 'Order not found' };
+      if (existing.status === CONFIG.ORDER_STATUS.DONE ||
+        existing.status === CONFIG.ORDER_STATUS.CANCELLED) {
+        return { success: false, error: 'Cannot edit completed or cancelled order' };
+      }
+
+      const taxRate = Number(SettingsService.get('tax_rate') || 0) / 100;
+      const subtotal = payload.items.reduce((sum, i) => sum + (i.unitPrice * i.qty), 0);
+      const total = subtotal + (subtotal * taxRate);
+
+      // 1. Update order total
+      SpreadsheetService.updateRow(SO, CO.ORDER_ID, orderId, _buildOrderRow(
+        orderId,
+        existing.createdAt ? new Date(existing.createdAt) : new Date(),
+        existing.cashierName,
+        existing.status,
+        total,
+        existing.paymentMethod,
+        existing.notes,
+        existing.customerName,
+      ));
+
+      // 2. Delete existing order items
+      const allItems = SpreadsheetService.getAllRows(SI);
+      allItems.forEach(row => {
+        if (String(row[CI.ORDER_ID - 1]) === String(orderId)) {
+          SpreadsheetService.deleteRow(SI, CI.ID, String(row[CI.ID - 1]));
+        }
+      });
+
+      // 3. Re-insert updated items
+      payload.items.forEach(item => {
+        const descJson = _buildItemDescription(item);
+        SpreadsheetService.appendRow(SI, [
+          SpreadsheetService.generateId('ITM'),
+          orderId,
+          item.menuId,
+          item.menuName,
+          Number(item.qty),
+          Number(item.unitPrice),
+          Number(item.unitPrice) * Number(item.qty),
+          descJson,
+        ]);
+      });
+
+      return { success: true, orderId, total };
+    } catch (e) {
+      return { success: false, error: e.message };
+    }
+  }
+
   // ── Full order with items ─────────────────────────────────
 
   function getOrderWithItems(orderId) {
@@ -198,6 +257,7 @@ const OrderService = (() => {
     createOrder,
     updateStatus,
     cancelOrder,
+    updateOrderItems,
     getOrderWithItems,
     getActiveOrdersWithItems,
   };

@@ -10,6 +10,7 @@
             overflow-y: auto;
             padding: 16px;
             -webkit-overflow-scrolling: touch;
+            padding-bottom: calc(var(--bottom-nav-h) + 24px);
         }
 
         .filter-tabs {
@@ -46,97 +47,6 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
-        }
-
-        .qcard {
-            background: var(--bg-2);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 14px 16px;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .qcard.status-pending {
-            border-left: 3px solid var(--blue);
-        }
-
-        .qcard.status-preparing {
-            border-left: 3px solid var(--amber);
-        }
-
-        .qcard-top {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            margin-bottom: 8px;
-        }
-
-        .qcard-id {
-            font-size: 11px;
-            color: var(--text-3);
-            font-weight: 500;
-            margin-bottom: 2px;
-        }
-
-        .qcard-customer {
-            font-family: var(--font-head);
-            font-size: 15px;
-            font-weight: 700;
-            color: var(--text);
-        }
-
-        .qcard-time {
-            font-size: 11px;
-            color: var(--text-3);
-            white-space: nowrap;
-            margin-top: 4px;
-        }
-
-        .qcard-items {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin-bottom: 12px;
-        }
-
-        .qcard-item-chip {
-            background: var(--bg-3);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-xs);
-            padding: 4px 8px;
-            font-size: 12px;
-            color: var(--text-2);
-            font-weight: 500;
-        }
-
-        .qcard-item-desc {
-            font-size: 11px;
-            color: var(--accent);
-            margin-top: 2px;
-            font-weight: 500;
-        }
-
-        .qcard-item-chip strong {
-            color: var(--text);
-            font-weight: 700;
-        }
-
-        .qcard-footer {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-        }
-
-        .qcard-total {
-            font-size: 13px;
-            font-weight: 700;
-            color: var(--text);
-        }
-
-        .qcard-actions {
-            display: flex;
-            gap: 6px;
         }
 
         .queue-stats {
@@ -231,7 +141,6 @@
             </div>
 
             <div class="queue-body">
-
                 <div class="queue-stats">
                     <div class="stat-card">
                         <div class="stat-num" id="statPending">—</div>
@@ -259,20 +168,21 @@
                         <p style="margin-top:12px">Memuat antrian...</p>
                     </div>
                 </div>
-                <!-- spacer: push content above bottom nav on mobile -->
-                <div class="mobile-spacer"></div>
-
             </div>
         </div>
     </div>
 
     <?!= include('components/Scripts') ?>
+    <?!= include('components/OrderCard') ?>
     <script>
         var allOrders = [];
+        var allMenus = []; // needed by OrderCard edit modal
         var activeFilter = 'all';
 
         window.addEventListener('load', function () {
             loadQueue();
+            // Load menus for edit modal
+            gasCall('apiGetAvailableMenus').then(function (menus) { allMenus = menus; });
             setInterval(loadQueue, 20000);
         });
 
@@ -317,81 +227,15 @@
                 return;
             }
 
+            // Use shared renderOrderCard from OrderCard component
             grid.innerHTML = filtered.map(function (o) {
-                var customer = o.customerName ||
-                    '<span style="color:var(--text-3);font-weight:400;font-size:12px">Tanpa nama</span>';
-                var timeAgo = getTimeAgo(o.createdAt);
-                var chips = o.items.map(function (i) {
-                    var descStr = '';
-                    if (i.description) {
-                        try {
-                            var d = JSON.parse(i.description);
-                            var parts = [];
-                            if (d.options) Object.keys(d.options).forEach(function (k) { if (d.options[k]) parts.push(d.options[k]); });
-                            if (d.notes) parts.push(d.notes);
-                            if (parts.length) descStr = parts.join(' · ');
-                        } catch (e) { }
-                    }
-                    return '<div class="qcard-item-chip">' +
-                        '<strong>' + i.qty + '×</strong> ' + i.menuName +
-                        (descStr ? '<div class="qcard-item-desc">' + descStr + '</div>' : '') +
-                        '</div>';
-                }).join('');
-                var total = o.items.reduce(function (s, i) { return s + i.unitPrice * i.qty; }, 0);
-
-                return '<div class="qcard status-' + o.status + '" id="qcard-' + o.orderId + '">' +
-                    '<div class="qcard-top">' +
-                    '<div>' +
-                    '<div class="qcard-id">#' + (o.orderId.split('-')[1] || o.orderId) + '</div>' +
-                    '<div class="qcard-customer">' + customer + '</div>' +
-                    '</div>' +
-                    '<div style="text-align:right">' +
-                    statusBadge(o.status) +
-                    '<div class="qcard-time">' + timeAgo + '</div>' +
-                    '</div>' +
-                    '</div>' +
-                    '<div class="qcard-items">' + chips + '</div>' +
-                    '<div class="qcard-footer">' +
-                    '<div class="qcard-total">' + formatIDR(total) + '</div>' +
-                    '<div class="qcard-actions">' +
-                    (o.status === 'pending'
-                        ? '<button class="btn btn-sm" style="background:var(--amber-bg);color:var(--amber);border:1px solid rgba(217,119,6,0.2)" onclick="updateStatus(\'' + o.orderId + '\',\'preparing\')">Proses</button>'
-                        : '') +
-                    (o.status === 'preparing'
-                        ? '<button class="btn btn-success btn-sm" onclick="updateStatus(\'' + o.orderId + '\',\'done\')">Selesai</button>'
-                        : '') +
-                    '<button class="btn btn-danger btn-sm" onclick="confirmCancel(\'' + o.orderId + '\')">Batal</button>' +
-                    '</div>' +
-                    '</div>' +
-                    '</div>';
+                return renderOrderCard(o, 'updateOrderStatusAndRefresh', 'openEditOrder');
             }).join('');
         }
 
-        function updateStatus(orderId, status) {
-            var card = document.getElementById('qcard-' + orderId);
-            if (card) card.style.opacity = '0.5';
-            gasCall('apiUpdateOrderStatus', orderId, status).then(function () {
-                loadQueue();
-                var labels = { preparing: 'Pesanan diproses', done: 'Pesanan selesai!' };
-                Toast.success(labels[status] || 'Status diupdate');
-            }).catch(function () {
-                if (card) card.style.opacity = '1';
-                Toast.error('Gagal update status');
-            });
-        }
-
-        function confirmCancel(orderId) {
-            if (confirm('Batalkan pesanan ini?')) {
-                updateStatus(orderId, 'cancelled');
-            }
-        }
-
-        function getTimeAgo(isoString) {
-            if (!isoString) return '';
-            var diff = Math.floor((Date.now() - new Date(isoString)) / 1000);
-            if (diff < 60) return diff + 'd lalu';
-            if (diff < 3600) return Math.floor(diff / 60) + 'm lalu';
-            return Math.floor(diff / 3600) + 'j lalu';
+        // Wrapper — call shared updateOrderStatus then reload
+        function updateOrderStatusAndRefresh(orderId, status) {
+            updateOrderStatus(orderId, status, loadQueue);
         }
     </script>
 </body>
