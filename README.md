@@ -54,8 +54,8 @@ components/
 
 ### Refactor
 - [x] Buat `components/OrderCard.html` — shared JS component untuk render order card (dipakai di Home + Queue)
-  - [X] Tombol **Edit Pesanan** di order card — bisa tambah item baru ke order yang sudah ada (status pending/preparing)
-  - [X] Edit pesanan bisa dipanggil dari tab Antrian di Home maupun halaman Queue
+  - [x] Tombol **Edit Pesanan** di order card — bisa tambah item baru ke order yang sudah ada (status pending/preparing)
+  - [x] Edit pesanan bisa dipanggil dari tab Antrian di Home maupun halaman Queue
 - [ ] Migrasi navigasi ke SPA (show/hide div) untuk performa lebih smooth
 
 ### Fitur
@@ -64,6 +64,20 @@ components/
   - Kasir bisa tambah/hapus item, ubah qty
   - Submit → update order di sheet (recalculate total, append item baru ke OrderItems)
   - Backend: `apiUpdateOrder(orderId, newItems)` di `OrderService` + `Code.js`
+- [ ] **Harga tambahan per opsi (price modifier)** — opsi seperti "Large" bisa dikenakan biaya tambahan
+  - Extend schema options di `MenuService`: `{ name, values, default, prices }` — contoh `prices: { Regular: 0, Large: 4000 }`
+  - `_encodeDescription` / `_parseDescription` di `MenuService` menyimpan & membaca `prices` per value
+  - Kalkulasi `unitPrice` di `OrderService` memperhitungkan modifier dari `selectedOptions`
+  - Frontend (cart + edit modal) menampilkan harga modifier (+Rp 4.000) di samping pill yang dipilih
+  - Subtotal & total otomatis menyesuaikan saat opsi diganti
+- [ ] **Default options di MenuManager** — saat membuat/edit menu, kasir bisa set nilai default per option group
+  - `MenuService` sudah punya field `default` di schema options, pastikan `MenuManager.html` expose UI-nya
+  - Tambahkan contoh preset di `Config.js`: Size (Regular / Large, default: Regular)
+- [ ] **Status pipeline lengkap** — tambah status `unpaid` dan `paid` ke alur pesanan
+  - Status flow: `pending → preparing → done → unpaid → paid`
+  - Pill filter di tab Antrian (Home) dan halaman Queue menyesuaikan: Semua · Pending · Diproses · Selesai · Belum Bayar · Lunas
+  - `OrderService` validasi transisi status yang diizinkan
+  - `renderOrderCard()` di `OrderCard.html` tampilkan tombol aksi sesuai status baru
 - [ ] Notifikasi audio saat ada order masuk baru di tab Antrian
 - [ ] Struk/receipt sederhana setelah order dikonfirmasi
 - [ ] Analytics breakdown per opsi (contoh: Espresso Panas Large terjual berapa)
