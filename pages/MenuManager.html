@@ -5,10 +5,6 @@
   <base target="_top">
   <?!= include('components/Styles') ?>
   <style>
-    /* ══════════════════════════════════════
-       MENU MANAGER — Mobile First
-    ══════════════════════════════════════ */
-
     .menu-body {
       flex: 1;
       overflow-y: auto;
@@ -72,14 +68,13 @@
       border-color: var(--accent);
     }
 
-    /* ── Menu count ── */
     .menu-count {
       font-size: 12px;
       color: var(--text-3);
       margin-bottom: 12px;
     }
 
-    /* ── Card grid — mobile single col, desktop table ── */
+    /* ── Card list (mobile) ── */
     .menu-cards {
       display: flex;
       flex-direction: column;
@@ -125,7 +120,7 @@
     .menu-card-meta {
       font-size: 12px;
       color: var(--text-3);
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
 
     .menu-card-price {
@@ -141,6 +136,22 @@
       line-height: 1.4;
     }
 
+    .menu-card-opts {
+      margin-top: 6px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .opt-chip {
+      font-size: 10.5px;
+      padding: 2px 8px;
+      background: var(--accent-dim);
+      color: var(--accent);
+      border-radius: 10px;
+      font-weight: 600;
+    }
+
     .menu-card-right {
       display: flex;
       flex-direction: column;
@@ -149,7 +160,7 @@
       flex-shrink: 0;
     }
 
-    /* ── Desktop: table layout ── */
+    /* ── Desktop table ── */
     .menu-table-wrap {
       display: none;
       background: var(--bg-2);
@@ -209,9 +220,127 @@
       gap: 6px;
     }
 
-    /* ══════════════════════════════════════
-       DESKTOP ≥ 768px
-    ══════════════════════════════════════ */
+    /* ── Options Builder ── */
+    .options-builder {
+      margin-bottom: 4px;
+    }
+
+    .options-builder-title {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    .option-group {
+      background: var(--bg-3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      margin-bottom: 8px;
+      position: relative;
+    }
+
+    .option-group-header {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .option-group-name {
+      flex: 1;
+    }
+
+    .option-group-default {
+      width: 110px;
+      flex-shrink: 0;
+    }
+
+    .option-values-row {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .option-value-chip {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .option-value-chip button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-3);
+      font-size: 12px;
+      padding: 0 0 0 2px;
+      line-height: 1;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .option-value-chip button:hover {
+      color: var(--red);
+    }
+
+    .add-value-row {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .add-value-row input {
+      flex: 1;
+    }
+
+    .remove-group-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-3);
+      font-size: 14px;
+      padding: 2px;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .remove-group-btn:hover {
+      color: var(--red);
+    }
+
+    .add-group-btn {
+      width: 100%;
+      padding: 9px;
+      border: 1px dashed var(--border-2);
+      border-radius: var(--radius-sm);
+      background: transparent;
+      color: var(--text-2);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .add-group-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-dim);
+    }
+
     @media (min-width: 768px) {
       .menu-body {
         padding: 24px 28px;
@@ -230,7 +359,6 @@
         max-width: 220px;
       }
 
-      /* Hide cards, show table on desktop */
       .menu-cards {
         display: none;
       }
@@ -253,8 +381,6 @@
       </div>
 
       <div class="menu-body">
-
-        <!-- Toolbar -->
         <div class="toolbar">
           <div class="toolbar-top">
             <button class="btn btn-primary btn-sm" onclick="openAddModal()">+ Tambah</button>
@@ -271,7 +397,7 @@
 
         <div class="menu-count" id="menuCount"></div>
 
-        <!-- Mobile: card list -->
+        <!-- Mobile cards -->
         <div class="menu-cards" id="menuCards">
           <div class="empty-state">
             <div class="spinner"></div>
@@ -279,7 +405,7 @@
           </div>
         </div>
 
-        <!-- Desktop: table -->
+        <!-- Desktop table -->
         <div class="menu-table-wrap">
           <table class="menu-table">
             <thead>
@@ -287,13 +413,14 @@
                 <th>Menu</th>
                 <th>Kategori</th>
                 <th>Harga</th>
+                <th>Opsi</th>
                 <th>Status</th>
                 <th>Aksi</th>
               </tr>
             </thead>
             <tbody id="menuTableBody">
               <tr>
-                <td colspan="5">
+                <td colspan="6">
                   <div class="empty-state">
                     <div class="spinner"></div>
                     <p style="margin-top:12px">Memuat menu...</p>
@@ -303,7 +430,6 @@
             </tbody>
           </table>
         </div>
-
       </div>
     </div>
   </div>
@@ -316,6 +442,7 @@
         <button class="modal-close" onclick="closeModal('menuModal')">✕</button>
       </div>
       <input type="hidden" id="editMenuId">
+
       <div class="form-group">
         <label class="form-label">Nama Menu *</label>
         <input type="text" class="form-control" id="menuName" placeholder="Contoh: Cappuccino">
@@ -338,11 +465,20 @@
         <label class="form-label">Deskripsi</label>
         <input type="text" class="form-control" id="menuDesc" placeholder="Opsional">
       </div>
-      <div class="form-group" style="margin-bottom:20px">
+      <div class="form-group">
         <label class="form-label">URL Gambar</label>
         <input type="url" class="form-control" id="menuImageUrl" placeholder="https://... (opsional)">
       </div>
-      <div class="flex gap-8">
+
+      <!-- Options Builder -->
+      <div class="options-builder">
+        <div class="options-builder-title">Opsi Pesanan <span
+            style="color:var(--text-3);font-weight:400;text-transform:none;letter-spacing:0">(opsional)</span></div>
+        <div id="optionGroups"></div>
+        <button class="add-group-btn" onclick="addOptionGroup()">+ Tambah Grup Opsi</button>
+      </div>
+
+      <div class="flex gap-8" style="margin-top:20px">
         <button class="btn btn-ghost flex-1" onclick="closeModal('menuModal')">Batal</button>
         <button class="btn btn-primary flex-1" onclick="saveMenu()">Simpan</button>
       </div>
@@ -358,15 +494,12 @@
       </div>
       <p style="color:var(--text-2);margin-bottom:20px;line-height:1.6">
         Yakin ingin menghapus <strong id="deleteMenuName" style="color:var(--text)"></strong>?
-        Tindakan ini tidak bisa dibatalkan.
       </p>
       <input type="hidden" id="deleteMenuId">
       <div class="flex gap-8">
         <button class="btn btn-ghost flex-1" onclick="closeModal('deleteModal')">Batal</button>
         <button class="btn btn-danger flex-1" onclick="confirmDelete()">Hapus</button>
       </div>
-      <!-- spacer: push content above bottom nav on mobile -->
-      <div class="mobile-spacer"></div>
     </div>
   </div>
 
@@ -374,6 +507,7 @@
   <script>
     var allMenus = [];
     var currentCat = 'all';
+    var optionGroupCount = 0;
 
     var CAT_EMOJI = { Coffee: '☕', 'No Coffee': '🥤', Snack: '🍩' };
     function menuEmoji(cat) { return CAT_EMOJI[cat] || '🍽️'; }
@@ -387,10 +521,6 @@
       }).catch(function (e) {
         console.error(e);
         Toast.error('Gagal memuat menu');
-        document.getElementById('menuCards').innerHTML =
-          '<div class="empty-state"><span class="empty-icon">⚠️</span><p>Gagal memuat. Coba refresh.</p></div>';
-        document.getElementById('menuTableBody').innerHTML =
-          '<tr><td colspan="5"><div class="empty-state"><p>Gagal memuat menu</p></div></td></tr>';
       });
     }
 
@@ -408,6 +538,9 @@
         return;
       }
       el.innerHTML = menus.map(function (m) {
+        var optChips = (m.options || []).map(function (o) {
+          return '<span class="opt-chip">' + o.name + '</span>';
+        }).join('');
         return '<div class="menu-card-item">' +
           '<div class="menu-card-icon">' + menuEmoji(m.category) + '</div>' +
           '<div class="menu-card-info">' +
@@ -415,6 +548,7 @@
           '<div class="menu-card-meta">' + m.category + '</div>' +
           '<div class="menu-card-price">' + formatIDR(m.price) + '</div>' +
           (m.description ? '<div class="menu-card-desc">' + m.description + '</div>' : '') +
+          (optChips ? '<div class="menu-card-opts">' + optChips + '</div>' : '') +
           '</div>' +
           '<div class="menu-card-right">' +
           '<span class="badge ' + (m.isAvailable ? 'badge-available' : 'badge-unavail') + '" ' +
@@ -434,29 +568,25 @@
     function renderTable(menus) {
       var tbody = document.getElementById('menuTableBody');
       if (!menus.length) {
-        tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><span class="empty-icon">🍽️</span><p>Belum ada menu</p></div></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><span class="empty-icon">🍽️</span><p>Belum ada menu</p></div></td></tr>';
         return;
       }
       tbody.innerHTML = menus.map(function (m) {
+        var optText = (m.options || []).map(function (o) { return o.name; }).join(', ') || '—';
         return '<tr>' +
-          '<td>' +
-          '<div class="menu-item-name">' + menuEmoji(m.category) + ' ' + m.name + '</div>' +
+          '<td><div class="menu-item-name">' + menuEmoji(m.category) + ' ' + m.name + '</div>' +
           (m.description ? '<div class="menu-item-desc">' + m.description + '</div>' : '') +
           '</td>' +
           '<td>' + m.category + '</td>' +
           '<td style="color:var(--accent);font-weight:600">' + formatIDR(m.price) + '</td>' +
-          '<td>' +
-          '<span class="badge ' + (m.isAvailable ? 'badge-available' : 'badge-unavail') + '" ' +
+          '<td style="font-size:12px;color:var(--text-2)">' + optText + '</td>' +
+          '<td><span class="badge ' + (m.isAvailable ? 'badge-available' : 'badge-unavail') + '" ' +
           'style="cursor:pointer" onclick="toggleAvail(\'' + m.id + '\')">' +
-          (m.isAvailable ? '✓ Tersedia' : '✕ Habis') +
-          '</span>' +
-          '</td>' +
-          '<td>' +
-          '<div class="actions-cell">' +
+          (m.isAvailable ? '✓ Tersedia' : '✕ Habis') + '</span></td>' +
+          '<td><div class="actions-cell">' +
           '<button class="btn btn-ghost btn-sm" onclick="openEditModal(\'' + m.id + '\')">Edit</button>' +
           '<button class="btn btn-danger btn-sm" onclick="openDeleteModal(\'' + m.id + '\',\'' + m.name.replace(/'/g, "\\'") + '\')">🗑️</button>' +
-          '</div>' +
-          '</td>' +
+          '</div></td>' +
           '</tr>';
       }).join('');
     }
@@ -468,7 +598,6 @@
       el.classList.add('active');
       filterSearch();
     }
-
     function filterSearch() {
       var q = document.getElementById('searchInput').value.toLowerCase();
       var filtered = currentCat === 'all' ? allMenus : allMenus.filter(function (m) { return m.category === currentCat; });
@@ -476,6 +605,95 @@
         return m.name.toLowerCase().includes(q) || (m.description || '').toLowerCase().includes(q);
       });
       renderAll(filtered);
+    }
+
+    /* ══════════════════════════════════════
+       OPTIONS BUILDER
+    ══════════════════════════════════════ */
+
+    function addOptionGroup(groupData) {
+      var container = document.getElementById('optionGroups');
+      var gid = 'og_' + (++optionGroupCount);
+      var name = groupData ? groupData.name : '';
+      var values = groupData ? groupData.values : [];
+      var defaultVal = groupData ? (groupData.default || '') : '';
+
+      var div = document.createElement('div');
+      div.className = 'option-group';
+      div.id = gid;
+      div.innerHTML =
+        '<button class="remove-group-btn" onclick="removeOptionGroup(\'' + gid + '\')">✕</button>' +
+        '<div class="option-group-header">' +
+        '<input type="text" class="form-control option-group-name" placeholder="Nama grup (contoh: Suhu)" value="' + name + '" style="flex:1">' +
+        '<input type="text" class="form-control option-group-default" placeholder="Default" value="' + defaultVal + '" style="width:110px">' +
+        '</div>' +
+        '<div class="option-values-row" id="vals_' + gid + '">' +
+        values.map(function (v) { return makeValueChip(gid, v); }).join('') +
+        '</div>' +
+        '<div class="add-value-row">' +
+        '<input type="text" class="form-control" id="newval_' + gid + '" placeholder="Tambah pilihan..." onkeydown="handleValueKey(event,\'' + gid + '\')">' +
+        '<button class="btn btn-ghost btn-sm" onclick="addValue(\'' + gid + '\')">+ Tambah</button>' +
+        '</div>';
+      container.appendChild(div);
+    }
+
+    function makeValueChip(gid, value) {
+      return '<div class="option-value-chip">' + value +
+        '<button onclick="removeValue(this)">✕</button>' +
+        '</div>';
+    }
+
+    function removeOptionGroup(gid) {
+      var el = document.getElementById(gid);
+      if (el) el.remove();
+    }
+
+    function handleValueKey(e, gid) {
+      if (e.key === 'Enter') { e.preventDefault(); addValue(gid); }
+    }
+
+    function addValue(gid) {
+      var input = document.getElementById('newval_' + gid);
+      var val = input.value.trim();
+      if (!val) return;
+      var container = document.getElementById('vals_' + gid);
+      var chip = document.createElement('div');
+      chip.innerHTML = makeValueChip(gid, val);
+      container.appendChild(chip.firstChild);
+      input.value = '';
+      input.focus();
+    }
+
+    function removeValue(btn) { btn.parentElement.remove(); }
+
+    // Collect all option groups from UI
+    function collectOptions() {
+      var groups = document.querySelectorAll('#optionGroups .option-group');
+      var result = [];
+      groups.forEach(function (g) {
+        var name = g.querySelector('.option-group-name').value.trim();
+        var defVal = g.querySelector('.option-group-default').value.trim();
+        var chips = g.querySelectorAll('.option-value-chip');
+        var values = [];
+        chips.forEach(function (c) {
+          // text node is first child
+          var text = c.childNodes[0].textContent.trim();
+          if (text) values.push(text);
+        });
+        if (name && values.length) {
+          var group = { name: name, values: values };
+          if (defVal) group.default = defVal;
+          result.push(group);
+        }
+      });
+      return result;
+    }
+
+    // Populate option groups from existing data
+    function populateOptions(options) {
+      document.getElementById('optionGroups').innerHTML = '';
+      optionGroupCount = 0;
+      (options || []).forEach(function (g) { addOptionGroup(g); });
     }
 
     /* ── Add / Edit ── */
@@ -487,6 +705,7 @@
       document.getElementById('menuDesc').value = '';
       document.getElementById('menuImageUrl').value = '';
       document.getElementById('menuCategory').value = 'Coffee';
+      populateOptions([]);
       openModal('menuModal');
     }
 
@@ -500,6 +719,7 @@
       document.getElementById('menuDesc').value = m.description || '';
       document.getElementById('menuImageUrl').value = m.imageUrl || '';
       document.getElementById('menuCategory').value = m.category;
+      populateOptions(m.options || []);
       openModal('menuModal');
     }
 
@@ -510,11 +730,12 @@
       var category = document.getElementById('menuCategory').value;
       var desc = document.getElementById('menuDesc').value.trim();
       var imageUrl = document.getElementById('menuImageUrl').value.trim();
+      var options = collectOptions();
 
       if (!name) return Toast.error('Nama menu harus diisi');
       if (!price || price <= 0) return Toast.error('Harga harus lebih dari 0');
 
-      var data = { name: name, price: price, category: category, description: desc, imageUrl: imageUrl };
+      var data = { name: name, price: price, category: category, description: desc, imageUrl: imageUrl, options: options };
       Loader.show();
       var call = id
         ? gasCall('apiUpdateMenu', id, JSON.stringify(data))
@@ -526,13 +747,10 @@
           Toast.success(id ? 'Menu diperbarui' : 'Menu ditambahkan');
           closeModal('menuModal');
           loadMenus();
-        } else {
-          Toast.error(res.error || 'Gagal menyimpan');
-        }
+        } else Toast.error(res.error || 'Gagal menyimpan');
       }).catch(function () { Loader.hide(); Toast.error('Terjadi kesalahan'); });
     }
 
-    /* ── Toggle availability ── */
     function toggleAvail(id) {
       gasCall('apiToggleMenuAvailability', id).then(function (res) {
         if (res.success) loadMenus();
@@ -540,7 +758,6 @@
       });
     }
 
-    /* ── Delete ── */
     function openDeleteModal(id, name) {
       document.getElementById('deleteMenuId').value = id;
       document.getElementById('deleteMenuName').textContent = name;
@@ -552,13 +769,8 @@
       Loader.show();
       gasCall('apiDeleteMenu', id).then(function (res) {
         Loader.hide();
-        if (res.success) {
-          Toast.success('Menu dihapus');
-          closeModal('deleteModal');
-          loadMenus();
-        } else {
-          Toast.error('Gagal menghapus menu');
-        }
+        if (res.success) { Toast.success('Menu dihapus'); closeModal('deleteModal'); loadMenus(); }
+        else Toast.error('Gagal menghapus menu');
       }).catch(function () { Loader.hide(); Toast.error('Terjadi kesalahan'); });
     }
   </script>

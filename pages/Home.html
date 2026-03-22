@@ -50,7 +50,7 @@
       border-bottom-color: var(--accent);
     }
 
-    /* ── Menu area — takes all remaining height ── */
+    /* ── Menu ── */
     .pos-main {
       flex: 1;
       display: flex;
@@ -378,7 +378,7 @@
       color: var(--accent);
     }
 
-    /* ── Item Modal ── */
+    /* ── Item Modal with options ── */
     .item-modal-icon {
       width: 64px;
       height: 64px;
@@ -402,7 +402,7 @@
       font-size: 14px;
       color: var(--accent);
       margin-top: 4px;
-      margin-bottom: 22px;
+      margin-bottom: 20px;
       font-weight: 600;
     }
 
@@ -442,6 +442,52 @@
       font-family: var(--font-head);
       min-width: 42px;
       text-align: center;
+    }
+
+    /* Option pill groups */
+    .option-section {
+      margin-bottom: 16px;
+      text-align: left;
+    }
+
+    .option-section-label {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    .option-pills {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .option-pill {
+      padding: 7px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: var(--bg-3);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-2);
+      cursor: pointer;
+      transition: var(--transition);
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    .option-pill.selected {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+      box-shadow: 0 2px 8px rgba(59, 91, 252, 0.25);
+    }
+
+    .option-pill:active {
+      transform: scale(0.96);
     }
 
     /* ── Checkout Modal ── */
@@ -499,7 +545,7 @@
       flex-wrap: wrap;
     }
 
-    .payment-pill {
+    .payment-pill-btn {
       flex: 1;
       min-width: 72px;
       padding: 9px 12px;
@@ -515,7 +561,7 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    .payment-pill.active {
+    .payment-pill-btn.active {
       background: var(--accent);
       color: #fff;
       border-color: var(--accent);
@@ -640,7 +686,6 @@
             <div class="cat-tab" onclick="switchTab('No Coffee',this)">No Coffee</div>
             <div class="cat-tab" onclick="switchTab('Snack',this)">Snack</div>
           </div>
-
           <div class="menu-grid-wrap">
             <div class="menu-grid" id="menuGrid">
               <div class="empty-state" style="grid-column:1/-1">
@@ -648,8 +693,6 @@
                 <p style="margin-top:12px">Memuat menu...</p>
               </div>
             </div>
-            <!-- spacer: push content above bottom nav on mobile -->
-            <div class="mobile-spacer"></div>
           </div>
         </div>
 
@@ -666,14 +709,11 @@
               </div>
             </div>
           </div>
-
           <div class="cart-items" id="cartItems">
-            <div class="empty-state">
-              <span class="empty-icon">🛒</span>
+            <div class="empty-state"><span class="empty-icon">🛒</span>
               <p>Pilih menu untuk mulai</p>
             </div>
           </div>
-
           <div class="cart-footer">
             <div class="customer-row">
               <div>
@@ -687,16 +727,11 @@
                 <input type="text" class="form-control" id="tableNumber" placeholder="Meja 3">
               </div>
             </div>
-            <div class="cart-summary-row">
-              <span>Subtotal</span><span id="cartSubtotal">Rp 0</span>
-            </div>
+            <div class="cart-summary-row"><span>Subtotal</span><span id="cartSubtotal">Rp 0</span></div>
             <div class="cart-summary-row" id="taxRow" style="display:none">
-              <span>Pajak (<span id="taxPct">0</span>%)</span>
-              <span id="cartTax">Rp 0</span>
+              <span>Pajak (<span id="taxPct">0</span>%)</span><span id="cartTax">Rp 0</span>
             </div>
-            <div class="cart-summary-row total">
-              <span>Total</span><span id="cartTotal">Rp 0</span>
-            </div>
+            <div class="cart-summary-row total"><span>Total</span><span id="cartTotal">Rp 0</span></div>
             <button class="btn btn-primary btn-lg btn-block" id="checkoutBtn" onclick="checkout()" disabled>
               Lanjut ke Pembayaran
             </button>
@@ -716,20 +751,27 @@
 
   <!-- ── Item Modal ── -->
   <div class="modal-overlay" id="itemModal" onclick="closeModalOnOverlay(event,'itemModal')">
-    <div class="modal" style="max-width:360px;text-align:center">
+    <div class="modal" style="max-width:380px;text-align:center">
       <button class="modal-close" style="margin-left:auto;margin-bottom:10px;display:block"
         onclick="closeModal('itemModal')">✕</button>
       <div class="item-modal-icon" id="modalIcon">🍽️</div>
       <div class="item-modal-name" id="modalName">—</div>
       <div class="item-modal-price" id="modalPrice">Rp 0</div>
+
+      <!-- Qty -->
       <div class="qty-big-ctrl" style="justify-content:center">
         <button class="qty-big-btn" onclick="modalQtyChange(-1)">−</button>
         <div class="qty-big-val" id="modalQty">1</div>
         <button class="qty-big-btn" onclick="modalQtyChange(1)">+</button>
       </div>
+
+      <!-- Dynamic option groups -->
+      <div id="modalOptions"></div>
+
+      <!-- Notes -->
       <div class="form-group" style="text-align:left">
         <label class="form-label">Catatan item</label>
-        <input type="text" class="form-control" id="modalNotes" placeholder="Less sugar, no ice...">
+        <input type="text" class="form-control" id="modalNotes" placeholder="Tambahan, permintaan khusus...">
       </div>
       <button class="btn btn-primary btn-lg btn-block" style="margin-top:14px" onclick="addToCart()">
         Tambah ke Pesanan
@@ -737,7 +779,7 @@
     </div>
   </div>
 
-  <!-- ── Checkout Confirm Modal ── -->
+  <!-- ── Checkout Modal ── -->
   <div class="modal-overlay" id="checkoutModal" onclick="closeModalOnOverlay(event,'checkoutModal')">
     <div class="modal" style="max-width:440px">
       <div class="modal-header">
@@ -754,9 +796,7 @@
       <div class="checkout-section">
         <div class="checkout-section-title">Ringkasan</div>
         <div id="checkoutItems"></div>
-        <div class="checkout-total-row">
-          <span>Total</span><span id="checkoutTotal">Rp 0</span>
-        </div>
+        <div class="checkout-total-row"><span>Total</span><span id="checkoutTotal">Rp 0</span></div>
       </div>
       <div class="checkout-section" style="margin-bottom:20px">
         <div class="checkout-section-title">Metode Pembayaran</div>
@@ -776,17 +816,19 @@
 
   <?!= include('components/Scripts') ?>
   <script>
-    let allMenus = [];
-    let cart = [];
-    let taxRate = 0;
-    let cashier = 'Kasir';
-    let selectedMenu = null;
-    let currentTab = 'all';
-    let isMobile = false;
-    let selectedPayment = 'Cash';
-    const PAYMENT_OPTIONS = ['Cash', 'QRIS', 'Transfer'];
+    var allMenus = [];
+    var cart = [];
+    var taxRate = 0;
+    var cashier = 'Kasir';
+    var selectedMenu = null;
+    var currentTab = 'all';
+    var isMobile = false;
+    var selectedPayment = 'Cash';
+    var selectedOptions = {}; // { "Suhu": "Panas", "Size": "Regular" }
 
-    window.addEventListener('load', () => {
+    var PAYMENT_OPTIONS = ['Cash', 'QRIS', 'Transfer'];
+
+    window.addEventListener('load', function () {
       checkMobile();
       window.addEventListener('resize', checkMobile);
       document.getElementById('headerDate').textContent = new Date().toLocaleDateString('id-ID', {
@@ -810,14 +852,14 @@
     function closeCartDrawer() { document.getElementById('cartPanel').classList.remove('open'); document.getElementById('cartDrawerOverlay').classList.remove('open'); }
 
     function renderPaymentPills() {
-      document.getElementById('paymentPills').innerHTML = PAYMENT_OPTIONS.map(p =>
-        `<div class="payment-pill ${p === selectedPayment ? 'active' : ''}" onclick="selectPayment('${p}')">${p}</div>`
-      ).join('');
+      document.getElementById('paymentPills').innerHTML = PAYMENT_OPTIONS.map(function (p) {
+        return '<div class="payment-pill-btn ' + (p === selectedPayment ? 'active' : '') + '" onclick="selectPayment(\'' + p + '\')">' + p + '</div>';
+      }).join('');
     }
     function selectPayment(method) { selectedPayment = method; renderPaymentPills(); }
 
     function loadSettings() {
-      gasCall('apiGetSettings').then(s => {
+      gasCall('apiGetSettings').then(function (s) {
         taxRate = Number(s.tax_rate || 0);
         cashier = s.cashier_name || 'Kasir';
         if (taxRate > 0) document.getElementById('taxRow').style.display = 'flex';
@@ -826,102 +868,178 @@
     }
 
     function loadMenus() {
-      gasCall('apiGetAvailableMenus').then(menus => {
+      gasCall('apiGetAvailableMenus').then(function (menus) {
         allMenus = menus;
         renderMenuGrid(currentTab);
-      }).catch(() => Toast.error('Gagal memuat menu'));
+      }).catch(function () { Toast.error('Gagal memuat menu'); });
     }
 
-    const CAT_EMOJI = { Coffee: '☕', 'No Coffee': '🥤', Snack: '🍩' };
+    var CAT_EMOJI = { Coffee: '☕', 'No Coffee': '🥤', Snack: '🍩' };
     function menuEmoji(cat) { return CAT_EMOJI[cat] || '🍽️'; }
 
     function renderMenuGrid(tab) {
-      const grid = document.getElementById('menuGrid');
-      const items = tab === 'all' ? allMenus : allMenus.filter(m => m.category === tab);
+      var grid = document.getElementById('menuGrid');
+      var items = tab === 'all' ? allMenus : allMenus.filter(function (m) { return m.category === tab; });
       if (!items.length) {
-        grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><span class="empty-icon">🍽️</span><p>Tidak ada menu</p></div>`;
+        grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><span class="empty-icon">🍽️</span><p>Tidak ada menu</p></div>';
         return;
       }
-      grid.innerHTML = items.map(m => {
-        const inCart = cart.find(c => c.menuId === m.id);
-        return `
-        <div class="menu-card ${m.isAvailable ? '' : 'unavailable'}" onclick="${m.isAvailable ? `openItemModal('${m.id}')` : ''}">
-          ${inCart ? `<div class="menu-card-badge">${inCart.qty}</div>` : ''}
-          <div class="menu-card-icon">${menuEmoji(m.category)}</div>
-          <div class="menu-card-cat">${m.category}</div>
-          <div class="menu-card-name">${m.name}</div>
-          <div class="menu-card-price">${formatIDR(m.price)}</div>
-        </div>`;
+      grid.innerHTML = items.map(function (m) {
+        var inCart = cart.find(function (c) { return c.menuId === m.id; });
+        return '<div class="menu-card ' + (m.isAvailable ? '' : 'unavailable') + '" onclick="' + (m.isAvailable ? 'openItemModal(\'' + m.id + '\')' : '') + '">' +
+          (inCart ? '<div class="menu-card-badge">' + inCart.qty + '</div>' : '') +
+          '<div class="menu-card-icon">' + menuEmoji(m.category) + '</div>' +
+          '<div class="menu-card-cat">' + m.category + '</div>' +
+          '<div class="menu-card-name">' + m.name + '</div>' +
+          '<div class="menu-card-price">' + formatIDR(m.price) + '</div>' +
+          '</div>';
       }).join('');
     }
 
     function switchTab(tab, el) {
       currentTab = tab;
-      document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.cat-tab').forEach(function (t) { t.classList.remove('active'); });
       el.classList.add('active');
       renderMenuGrid(tab);
     }
 
+    /* ══════════════════════════════════════
+       ITEM MODAL WITH OPTIONS
+    ══════════════════════════════════════ */
+
     function openItemModal(menuId) {
-      const m = allMenus.find(x => x.id === menuId);
+      var m = allMenus.find(function (x) { return x.id === menuId; });
       if (!m) return;
       selectedMenu = m;
+      selectedOptions = {};
+
       document.getElementById('modalIcon').textContent = menuEmoji(m.category);
       document.getElementById('modalName').textContent = m.name;
       document.getElementById('modalPrice').textContent = formatIDR(m.price);
       document.getElementById('modalNotes').value = '';
-      const existing = cart.find(c => c.menuId === m.id);
+
+      var existing = cart.find(function (c) { return c.menuId === m.id; });
       document.getElementById('modalQty').textContent = existing ? existing.qty : 1;
+
+      // Restore previous option selections if item already in cart
+      if (existing && existing.selectedOptions) {
+        selectedOptions = JSON.parse(JSON.stringify(existing.selectedOptions));
+      } else {
+        // Set defaults
+        (m.options || []).forEach(function (g) {
+          if (g.default) selectedOptions[g.name] = g.default;
+          else if (g.values && g.values.length) selectedOptions[g.name] = g.values[0];
+        });
+      }
+
+      renderModalOptions(m.options || []);
       openModal('itemModal');
     }
-    function modalQtyChange(delta) {
-      const el = document.getElementById('modalQty');
-      el.textContent = Math.max(1, Number(el.textContent) + delta);
-    }
-    function addToCart() {
-      if (!selectedMenu) return;
-      const qty = Number(document.getElementById('modalQty').textContent);
-      const notes = document.getElementById('modalNotes').value;
-      const existing = cart.find(c => c.menuId === selectedMenu.id);
-      if (existing) { existing.qty = qty; existing.notes = notes; }
-      else cart.push({ menuId: selectedMenu.id, menuName: selectedMenu.name, qty, unitPrice: selectedMenu.price, notes, emoji: menuEmoji(selectedMenu.category) });
-      closeModal('itemModal');
-      renderCart(); renderMenuGrid(currentTab);
-      Toast.success(`${selectedMenu.name} ditambahkan`);
+
+    function renderModalOptions(options) {
+      var container = document.getElementById('modalOptions');
+      if (!options || !options.length) { container.innerHTML = ''; return; }
+      container.innerHTML = options.map(function (g) {
+        var pills = g.values.map(function (v) {
+          var isSelected = selectedOptions[g.name] === v;
+          return '<div class="option-pill ' + (isSelected ? 'selected' : '') + '" ' +
+            'onclick="selectOption(\'' + g.name + '\',\'' + v + '\')">' + v + '</div>';
+        }).join('');
+        return '<div class="option-section">' +
+          '<div class="option-section-label">' + g.name + '</div>' +
+          '<div class="option-pills" id="pills_' + g.name.replace(/\s/g, '_') + '">' + pills + '</div>' +
+          '</div>';
+      }).join('');
     }
 
+    function selectOption(groupName, value) {
+      selectedOptions[groupName] = value;
+      // Re-render just the pills for this group
+      var safeId = 'pills_' + groupName.replace(/\s/g, '_');
+      var container = document.getElementById(safeId);
+      if (!container) return;
+      var group = selectedMenu.options.find(function (g) { return g.name === groupName; });
+      if (!group) return;
+      container.innerHTML = group.values.map(function (v) {
+        return '<div class="option-pill ' + (selectedOptions[groupName] === v ? 'selected' : '') + '" ' +
+          'onclick="selectOption(\'' + groupName + '\',\'' + v + '\')">' + v + '</div>';
+      }).join('');
+    }
+
+    function modalQtyChange(delta) {
+      var el = document.getElementById('modalQty');
+      el.textContent = Math.max(1, Number(el.textContent) + delta);
+    }
+
+    function addToCart() {
+      if (!selectedMenu) return;
+      var qty = Number(document.getElementById('modalQty').textContent);
+      var notes = document.getElementById('modalNotes').value.trim();
+
+      // Build notes string from options + manual notes
+      var optParts = [];
+      Object.keys(selectedOptions).forEach(function (k) {
+        if (selectedOptions[k]) optParts.push(selectedOptions[k]);
+      });
+      if (notes) optParts.push(notes);
+      var fullNotes = optParts.join(' · ');
+
+      var existing = cart.find(function (c) { return c.menuId === selectedMenu.id; });
+      if (existing) {
+        existing.qty = qty;
+        existing.notes = fullNotes;
+        existing.selectedOptions = JSON.parse(JSON.stringify(selectedOptions));
+      } else {
+        cart.push({
+          menuId: selectedMenu.id,
+          menuName: selectedMenu.name,
+          qty: qty,
+          unitPrice: selectedMenu.price,
+          notes: fullNotes,
+          selectedOptions: JSON.parse(JSON.stringify(selectedOptions)),
+          emoji: menuEmoji(selectedMenu.category),
+        });
+      }
+      closeModal('itemModal');
+      renderCart(); renderMenuGrid(currentTab);
+      Toast.success(selectedMenu.name + ' ditambahkan');
+    }
+
+    /* ── FAB ── */
     function updateFab() {
-      const fab = document.getElementById('cartFab');
-      const count = document.getElementById('cartFabCount');
-      const total = cart.reduce((s, i) => s + i.qty, 0);
+      var fab = document.getElementById('cartFab');
+      var count = document.getElementById('cartFabCount');
+      var total = cart.reduce(function (s, i) { return s + i.qty; }, 0);
       count.textContent = total;
       fab.style.display = (isMobile && total > 0) ? 'flex' : 'none';
     }
 
+    /* ── Cart ── */
     function renderCart() {
-      const el = document.getElementById('cartItems');
+      var el = document.getElementById('cartItems');
       if (!cart.length) {
-        el.innerHTML = `<div class="empty-state"><span class="empty-icon">🛒</span><p>Pilih menu untuk mulai</p></div>`;
+        el.innerHTML = '<div class="empty-state"><span class="empty-icon">🛒</span><p>Pilih menu untuk mulai</p></div>';
         document.getElementById('checkoutBtn').disabled = true;
         updateTotals(); updateFab(); return;
       }
-      el.innerHTML = cart.map((item, idx) => `
-      <div class="cart-item">
-        <div class="cart-item-icon">${item.emoji}</div>
-        <div class="cart-item-info">
-          <div class="cart-item-name">${item.menuName}</div>
-          <div class="cart-item-price">${formatIDR(item.unitPrice)}${item.notes ? ` · ${item.notes}` : ''}</div>
-          <div class="qty-ctrl">
-            <div class="qty-btn" onclick="cartQty(${idx},-1)">−</div>
-            <div class="qty-val">${item.qty}</div>
-            <div class="qty-btn" onclick="cartQty(${idx},1)">+</div>
-          </div>
-        </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
-          <div class="cart-item-subtotal">${formatIDR(item.unitPrice * item.qty)}</div>
-          <button class="btn btn-danger btn-sm" onclick="removeFromCart(${idx})">✕</button>
-        </div>
-      </div>`).join('');
+      el.innerHTML = cart.map(function (item, idx) {
+        return '<div class="cart-item">' +
+          '<div class="cart-item-icon">' + item.emoji + '</div>' +
+          '<div class="cart-item-info">' +
+          '<div class="cart-item-name">' + item.menuName + '</div>' +
+          (item.notes ? '<div class="cart-item-price">' + item.notes + '</div>' : '') +
+          '<div class="qty-ctrl">' +
+          '<div class="qty-btn" onclick="cartQty(' + idx + ',-1)">−</div>' +
+          '<div class="qty-val">' + item.qty + '</div>' +
+          '<div class="qty-btn" onclick="cartQty(' + idx + ',1)">+</div>' +
+          '</div>' +
+          '</div>' +
+          '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">' +
+          '<div class="cart-item-subtotal">' + formatIDR(item.unitPrice * item.qty) + '</div>' +
+          '<button class="btn btn-danger btn-sm" onclick="removeFromCart(' + idx + ')">✕</button>' +
+          '</div>' +
+          '</div>';
+      }).join('');
       document.getElementById('checkoutBtn').disabled = false;
       updateTotals(); updateFab();
     }
@@ -936,28 +1054,30 @@
       if (isMobile) closeCartDrawer();
     }
     function updateTotals() {
-      const sub = cart.reduce((s, i) => s + i.unitPrice * i.qty, 0);
-      const tax = sub * (taxRate / 100);
+      var sub = cart.reduce(function (s, i) { return s + i.unitPrice * i.qty; }, 0);
+      var tax = sub * (taxRate / 100);
       document.getElementById('cartSubtotal').textContent = formatIDR(sub);
       document.getElementById('cartTax').textContent = formatIDR(tax);
       document.getElementById('cartTotal').textContent = formatIDR(sub + tax);
     }
 
+    /* ── Checkout ── */
     function checkout() {
       if (!cart.length) return;
-      const customerName = document.getElementById('customerName').value.trim();
-      const tableNumber = document.getElementById('tableNumber').value.trim();
-      const customerLabel = [customerName, tableNumber].filter(Boolean).join(' · ');
-      const infoEl = document.getElementById('checkoutCustomerInfo');
+      var customerName = document.getElementById('customerName').value.trim();
+      var tableNumber = document.getElementById('tableNumber').value.trim();
+      var customerLabel = [customerName, tableNumber].filter(Boolean).join(' · ');
+      var infoEl = document.getElementById('checkoutCustomerInfo');
       if (customerLabel) { document.getElementById('checkoutCustomerLabel').textContent = customerLabel; infoEl.style.display = 'block'; }
       else infoEl.style.display = 'none';
-      const sub = cart.reduce((s, i) => s + i.unitPrice * i.qty, 0);
-      const tax = sub * (taxRate / 100);
-      document.getElementById('checkoutItems').innerHTML = cart.map(i => `
-      <div class="confirm-line">
-        <span>${i.qty}× ${i.menuName}${i.notes ? ` <span style="color:var(--text-3)">(${i.notes})</span>` : ''}</span>
-        <span>${formatIDR(i.unitPrice * i.qty)}</span>
-      </div>`).join('');
+      var sub = cart.reduce(function (s, i) { return s + i.unitPrice * i.qty; }, 0);
+      var tax = sub * (taxRate / 100);
+      document.getElementById('checkoutItems').innerHTML = cart.map(function (i) {
+        return '<div class="confirm-line">' +
+          '<span>' + i.qty + '× ' + i.menuName + (i.notes ? ' <span style="color:var(--text-3)">(' + i.notes + ')</span>' : '') + '</span>' +
+          '<span>' + formatIDR(i.unitPrice * i.qty) + '</span>' +
+          '</div>';
+      }).join('');
       document.getElementById('checkoutTotal').textContent = formatIDR(sub + tax);
       document.getElementById('orderNotes').value = '';
       selectedPayment = 'Cash';
@@ -967,11 +1087,11 @@
     }
 
     function submitOrder() {
-      const customerName = document.getElementById('customerName').value.trim();
-      const tableNumber = document.getElementById('tableNumber').value.trim();
-      const customerLabel = [customerName, tableNumber].filter(Boolean).join(' · ');
-      const payload = {
-        items: cart.map(({ menuId, menuName, qty, unitPrice }) => ({ menuId, menuName, qty, unitPrice })),
+      var customerName = document.getElementById('customerName').value.trim();
+      var tableNumber = document.getElementById('tableNumber').value.trim();
+      var customerLabel = [customerName, tableNumber].filter(Boolean).join(' · ');
+      var payload = {
+        items: cart.map(function (i) { return { menuId: i.menuId, menuName: i.menuName, qty: i.qty, unitPrice: i.unitPrice }; }),
         paymentMethod: selectedPayment,
         notes: document.getElementById('orderNotes').value.trim(),
         cashierName: cashier,
@@ -979,14 +1099,14 @@
       };
       closeModal('checkoutModal');
       Loader.show();
-      gasCall('apiCreateOrder', JSON.stringify(payload)).then(res => {
+      gasCall('apiCreateOrder', JSON.stringify(payload)).then(function (res) {
         Loader.hide();
         if (res.success) {
-          const label = customerLabel ? ` untuk ${customerLabel}` : '';
-          Toast.success(`Pesanan${label} berhasil dibuat!`);
+          var label = customerLabel ? ' untuk ' + customerLabel : '';
+          Toast.success('Pesanan' + label + ' berhasil dibuat!');
           clearCart();
         } else Toast.error('Gagal: ' + res.error);
-      }).catch(() => { Loader.hide(); Toast.error('Terjadi kesalahan'); });
+      }).catch(function () { Loader.hide(); Toast.error('Terjadi kesalahan'); });
     }
   </script>
 </body>
