@@ -5,27 +5,16 @@
 const SpreadsheetService = (() => {
 
   // ── Spreadsheet accessor ──────────────────────────────────
-  // Strategi:
-  // 1. Coba getActiveSpreadsheet() dulu (works kalau container-bound)
-  // 2. Kalau null, ambil dari PropertiesService (disimpan saat pertama kali setup)
-  // 3. Kalau belum ada sama sekali, buat spreadsheet baru otomatis
   function getSpreadsheet() {
-    // Coba active dulu
     const active = SpreadsheetApp.getActiveSpreadsheet();
     if (active) return active;
 
-    // Coba dari PropertiesService
     const props = PropertiesService.getScriptProperties();
     const storedId = props.getProperty('SPREADSHEET_ID');
     if (storedId) {
-      try {
-        return SpreadsheetApp.openById(storedId);
-      } catch (e) {
-        // ID tidak valid, lanjut buat baru
-      }
+      try { return SpreadsheetApp.openById(storedId); } catch (e) { }
     }
 
-    // Buat spreadsheet baru dan simpan ID-nya
     const newSs = SpreadsheetApp.create(CONFIG.APP_NAME + ' Database');
     props.setProperty('SPREADSHEET_ID', newSs.getId());
     return newSs;
@@ -58,11 +47,10 @@ const SpreadsheetService = (() => {
       'orderId', 'createdAt', 'cashierName', 'status', 'totalAmount', 'paymentMethod', 'notes', 'customerName'
     ]);
     getOrCreateSheet(CONFIG.SHEETS.ORDER_ITEMS, [
-      'id', 'orderId', 'menuId', 'menuName', 'qty', 'unitPrice', 'subtotal'
+      'id', 'orderId', 'menuId', 'menuName', 'qty', 'unitPrice', 'subtotal', 'description'
     ]);
-    getOrCreateSheet(CONFIG.SHEETS.ORDERS, [
-      'orderId', 'createdAt', 'cashierName', 'status', 'totalAmount', 'paymentMethod', 'notes', 'customerName'
-    ]);
+    getOrCreateSheet(CONFIG.SHEETS.SETTINGS, ['key', 'value']);
+    seedSettings();
   }
 
   function seedSettings() {
@@ -70,9 +58,7 @@ const SpreadsheetService = (() => {
     const existing = getAllRows(CONFIG.SHEETS.SETTINGS);
     const existingKeys = existing.map(r => r[0]);
     Object.entries(DEFAULT_SETTINGS).forEach(([key, value]) => {
-      if (!existingKeys.includes(key)) {
-        sheet.appendRow([key, value]);
-      }
+      if (!existingKeys.includes(key)) sheet.appendRow([key, value]);
     });
   }
 

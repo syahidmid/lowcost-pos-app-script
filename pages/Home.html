@@ -291,7 +291,7 @@
       color: var(--text);
     }
 
-    .cart-item-price {
+    .cart-item-opts {
       font-size: 12px;
       color: var(--text-3);
       margin-top: 2px;
@@ -378,7 +378,7 @@
       color: var(--accent);
     }
 
-    /* ── Item Modal with options ── */
+    /* ── Item Modal ── */
     .item-modal-icon {
       width: 64px;
       height: 64px;
@@ -444,7 +444,7 @@
       text-align: center;
     }
 
-    /* Option pill groups */
+    /* ── Option pills ── */
     .option-section {
       margin-bottom: 16px;
       text-align: left;
@@ -757,18 +757,13 @@
       <div class="item-modal-icon" id="modalIcon">🍽️</div>
       <div class="item-modal-name" id="modalName">—</div>
       <div class="item-modal-price" id="modalPrice">Rp 0</div>
-
-      <!-- Qty -->
       <div class="qty-big-ctrl" style="justify-content:center">
         <button class="qty-big-btn" onclick="modalQtyChange(-1)">−</button>
         <div class="qty-big-val" id="modalQty">1</div>
         <button class="qty-big-btn" onclick="modalQtyChange(1)">+</button>
       </div>
-
-      <!-- Dynamic option groups -->
+      <!-- Dynamic option groups injected here -->
       <div id="modalOptions"></div>
-
-      <!-- Notes -->
       <div class="form-group" style="text-align:left">
         <label class="form-label">Catatan item</label>
         <input type="text" class="form-control" id="modalNotes" placeholder="Tambahan, permintaan khusus...">
@@ -824,8 +819,7 @@
     var currentTab = 'all';
     var isMobile = false;
     var selectedPayment = 'Cash';
-    var selectedOptions = {}; // { "Suhu": "Panas", "Size": "Regular" }
-
+    var selectedOptions = {}; // { "Suhu": "Panas", "Size": "Large" }
     var PAYMENT_OPTIONS = ['Cash', 'QRIS', 'Transfer'];
 
     window.addEventListener('load', function () {
@@ -904,7 +898,7 @@
     }
 
     /* ══════════════════════════════════════
-       ITEM MODAL WITH OPTIONS
+       ITEM MODAL
     ══════════════════════════════════════ */
 
     function openItemModal(menuId) {
@@ -921,7 +915,7 @@
       var existing = cart.find(function (c) { return c.menuId === m.id; });
       document.getElementById('modalQty').textContent = existing ? existing.qty : 1;
 
-      // Restore previous option selections if item already in cart
+      // Restore selections if already in cart
       if (existing && existing.selectedOptions) {
         selectedOptions = JSON.parse(JSON.stringify(existing.selectedOptions));
       } else {
@@ -941,9 +935,8 @@
       if (!options || !options.length) { container.innerHTML = ''; return; }
       container.innerHTML = options.map(function (g) {
         var pills = g.values.map(function (v) {
-          var isSelected = selectedOptions[g.name] === v;
-          return '<div class="option-pill ' + (isSelected ? 'selected' : '') + '" ' +
-            'onclick="selectOption(\'' + g.name + '\',\'' + v + '\')">' + v + '</div>';
+          var sel = selectedOptions[g.name] === v;
+          return '<div class="option-pill ' + (sel ? 'selected' : '') + '" onclick="selectOption(\'' + g.name + '\',\'' + v + '\')">' + v + '</div>';
         }).join('');
         return '<div class="option-section">' +
           '<div class="option-section-label">' + g.name + '</div>' +
@@ -954,15 +947,13 @@
 
     function selectOption(groupName, value) {
       selectedOptions[groupName] = value;
-      // Re-render just the pills for this group
       var safeId = 'pills_' + groupName.replace(/\s/g, '_');
       var container = document.getElementById(safeId);
-      if (!container) return;
-      var group = selectedMenu.options.find(function (g) { return g.name === groupName; });
+      if (!container || !selectedMenu) return;
+      var group = (selectedMenu.options || []).find(function (g) { return g.name === groupName; });
       if (!group) return;
       container.innerHTML = group.values.map(function (v) {
-        return '<div class="option-pill ' + (selectedOptions[groupName] === v ? 'selected' : '') + '" ' +
-          'onclick="selectOption(\'' + groupName + '\',\'' + v + '\')">' + v + '</div>';
+        return '<div class="option-pill ' + (selectedOptions[groupName] === v ? 'selected' : '') + '" onclick="selectOption(\'' + groupName + '\',\'' + v + '\')">' + v + '</div>';
       }).join('');
     }
 
@@ -974,20 +965,21 @@
     function addToCart() {
       if (!selectedMenu) return;
       var qty = Number(document.getElementById('modalQty').textContent);
-      var notes = document.getElementById('modalNotes').value.trim();
+      var manualNote = document.getElementById('modalNotes').value.trim();
 
-      // Build notes string from options + manual notes
+      // Build display string for cart: "Panas · Large · less sugar"
       var optParts = [];
       Object.keys(selectedOptions).forEach(function (k) {
         if (selectedOptions[k]) optParts.push(selectedOptions[k]);
       });
-      if (notes) optParts.push(notes);
-      var fullNotes = optParts.join(' · ');
+      if (manualNote) optParts.push(manualNote);
+      var displayNotes = optParts.join(' · ');
 
       var existing = cart.find(function (c) { return c.menuId === selectedMenu.id; });
       if (existing) {
         existing.qty = qty;
-        existing.notes = fullNotes;
+        existing.notes = displayNotes;
+        existing.manualNote = manualNote;
         existing.selectedOptions = JSON.parse(JSON.stringify(selectedOptions));
       } else {
         cart.push({
@@ -995,8 +987,9 @@
           menuName: selectedMenu.name,
           qty: qty,
           unitPrice: selectedMenu.price,
-          notes: fullNotes,
-          selectedOptions: JSON.parse(JSON.stringify(selectedOptions)),
+          notes: displayNotes,       // untuk display di cart
+          manualNote: manualNote,         // catatan teks murni
+          selectedOptions: JSON.parse(JSON.stringify(selectedOptions)), // opsi terstruktur
           emoji: menuEmoji(selectedMenu.category),
         });
       }
@@ -1027,7 +1020,7 @@
           '<div class="cart-item-icon">' + item.emoji + '</div>' +
           '<div class="cart-item-info">' +
           '<div class="cart-item-name">' + item.menuName + '</div>' +
-          (item.notes ? '<div class="cart-item-price">' + item.notes + '</div>' : '') +
+          (item.notes ? '<div class="cart-item-opts">' + item.notes + '</div>' : '') +
           '<div class="qty-ctrl">' +
           '<div class="qty-btn" onclick="cartQty(' + idx + ',-1)">−</div>' +
           '<div class="qty-val">' + item.qty + '</div>' +
@@ -1090,13 +1083,24 @@
       var customerName = document.getElementById('customerName').value.trim();
       var tableNumber = document.getElementById('tableNumber').value.trim();
       var customerLabel = [customerName, tableNumber].filter(Boolean).join(' · ');
+
       var payload = {
-        items: cart.map(function (i) { return { menuId: i.menuId, menuName: i.menuName, qty: i.qty, unitPrice: i.unitPrice }; }),
+        items: cart.map(function (i) {
+          return {
+            menuId: i.menuId,
+            menuName: i.menuName,
+            qty: i.qty,
+            unitPrice: i.unitPrice,
+            notes: i.manualNote || '',  // catatan teks murni
+            selectedOptions: i.selectedOptions || {},  // { "Suhu": "Panas", "Size": "Large" }
+          };
+        }),
         paymentMethod: selectedPayment,
         notes: document.getElementById('orderNotes').value.trim(),
         cashierName: cashier,
         customerName: customerLabel,
       };
+
       closeModal('checkoutModal');
       Loader.show();
       gasCall('apiCreateOrder', JSON.stringify(payload)).then(function (res) {

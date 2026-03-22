@@ -11,18 +11,23 @@ const OrderService = (() => {
 
   // ── Helpers ───────────────────────────────────────────────
 
-  // Build a full 8-column order row array (matches sheet exactly)
   function _buildOrderRow(orderId, now, cashierName, status, total, paymentMethod, notes, customerName) {
     return [
-      orderId,
-      now,
-      cashierName,
-      status,
-      total,
-      paymentMethod,
-      notes || '',
-      customerName || '',
+      orderId, now, cashierName, status, total,
+      paymentMethod, notes || '', customerName || '',
     ];
+  }
+
+  // Build description JSON for order item
+  // { notes: "less sugar", options: { "Suhu": "Panas", "Size": "Large" } }
+  function _buildItemDescription(item) {
+    var hasNotes = item.notes && item.notes.trim();
+    var hasOptions = item.selectedOptions && Object.keys(item.selectedOptions).length > 0;
+    if (!hasNotes && !hasOptions) return '';
+    var obj = {};
+    if (hasNotes) obj.notes = item.notes.trim();
+    if (hasOptions) obj.options = item.selectedOptions;
+    return JSON.stringify(obj);
   }
 
   // ── Mappers ───────────────────────────────────────────────
@@ -36,11 +41,18 @@ const OrderService = (() => {
       totalAmount: Number(row[CO.TOTAL_AMOUNT - 1]),
       paymentMethod: row[CO.PAYMENT_METHOD - 1],
       notes: row[CO.NOTES - 1],
-      customerName: row[CO.CUSTOMER_NAME - 1] || '', // col 8
+      customerName: row[CO.CUSTOMER_NAME - 1] || '',
     };
   }
 
   function _itemRowToObj(row) {
+    // Parse description JSON — fallback gracefully if malformed
+    var descRaw = row[CI.DESCRIPTION - 1] || '';
+    var descObj = {};
+    if (descRaw) {
+      try { descObj = JSON.parse(descRaw); } catch (e) { descObj = {}; }
+    }
+
     return {
       id: String(row[CI.ID - 1]),
       orderId: String(row[CI.ORDER_ID - 1]),
@@ -49,6 +61,9 @@ const OrderService = (() => {
       qty: Number(row[CI.QTY - 1]),
       unitPrice: Number(row[CI.UNIT_PRICE - 1]),
       subtotal: Number(row[CI.SUBTOTAL - 1]),
+      notes: descObj.notes || '',     // catatan teks bebas
+      options: descObj.options || {},     // { "Suhu": "Panas", "Size": "Large" }
+      description: descRaw,                   // raw JSON string, untuk analytics
     };
   }
 
@@ -89,8 +104,15 @@ const OrderService = (() => {
 
   /**
    * Create a new order
-   * @param {Object} payload - { items, paymentMethod, cashierName, notes, customerName }
-   * customerName bisa berisi "Budi · Meja 3" atau kosong
+   * @param {Object} payload
+   * {
+   *   items: [{
+   *     menuId, menuName, qty, unitPrice,
+   *     notes?,           // catatan teks bebas
+   *     selectedOptions?  // { "Suhu": "Panas", "Size": "Large" }
+   *   }],
+   *   paymentMethod, cashierName, notes, customerName
+   * }
    */
   function createOrder(payload) {
     try {
@@ -100,20 +122,20 @@ const OrderService = (() => {
       const subtotal = payload.items.reduce((sum, i) => sum + (i.unitPrice * i.qty), 0);
       const total = subtotal + (subtotal * taxRate);
 
-      // Write order header — 8 columns
+      // Write order header
       SpreadsheetService.appendRow(SO, _buildOrderRow(
-        orderId,
-        now,
+        orderId, now,
         payload.cashierName || SettingsService.get('cashier_name') || 'Cashier',
         CONFIG.ORDER_STATUS.PENDING,
         total,
         payload.paymentMethod || 'Cash',
         payload.notes || '',
-        payload.customerName || '',  // ← nama + meja
+        payload.customerName || '',
       ));
 
-      // Write order items
+      // Write order items — include description JSON
       payload.items.forEach(item => {
+        const descJson = _buildItemDescription(item);
         SpreadsheetService.appendRow(SI, [
           SpreadsheetService.generateId('ITM'),
           orderId,
@@ -122,6 +144,7 @@ const OrderService = (() => {
           Number(item.qty),
           Number(item.unitPrice),
           Number(item.unitPrice) * Number(item.qty),
+          descJson, // col 8 — JSON string or empty
         ]);
       });
 
@@ -134,8 +157,6 @@ const OrderService = (() => {
   function updateStatus(orderId, newStatus) {
     const existing = getOrderById(orderId);
     if (!existing) return { success: false, error: 'Order not found' };
-
-    // Rebuild full 8-column row — preserve customerName
     SpreadsheetService.updateRow(SO, CO.ORDER_ID, orderId, _buildOrderRow(
       orderId,
       existing.createdAt ? new Date(existing.createdAt) : new Date(),
@@ -144,9 +165,8 @@ const OrderService = (() => {
       existing.totalAmount,
       existing.paymentMethod,
       existing.notes,
-      existing.customerName,  // ← jangan hilang saat update status
+      existing.customerName,
     ));
-
     return { success: true };
   }
 

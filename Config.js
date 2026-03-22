@@ -54,6 +54,7 @@ const CONFIG = {
       QTY: 5,
       UNIT_PRICE: 6,
       SUBTOTAL: 7,
+      DESCRIPTION: 8, // JSON: {"notes":"less sugar","options":{"Suhu":"Panas","Size":"Large"}}
     },
     SETTINGS: {
       KEY: 1,
