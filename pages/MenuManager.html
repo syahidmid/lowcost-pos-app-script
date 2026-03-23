@@ -259,38 +259,76 @@
       flex-shrink: 0;
     }
 
+    /* CHANGED: value chips now stack vertically to fit price input */
     .option-values-row {
       display: flex;
+      flex-direction: column;
       gap: 6px;
-      align-items: center;
-      flex-wrap: wrap;
     }
 
     .option-value-chip {
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 6px;
       background: var(--bg-2);
       border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 4px 10px;
-      font-size: 12px;
+      border-radius: var(--radius-xs);
+      padding: 6px 10px;
+      font-size: 12.5px;
       font-weight: 500;
       color: var(--text);
     }
 
-    .option-value-chip button {
+    .option-value-label {
+      flex: 1;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .option-value-price-wrap {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .option-value-price-prefix {
+      font-size: 11px;
+      color: var(--text-3);
+      white-space: nowrap;
+    }
+
+    .option-value-price-input {
+      width: 80px;
+      font-size: 12px;
+      color: var(--text);
+      background: var(--bg-3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xs);
+      padding: 4px 8px;
+      outline: none;
+      text-align: right;
+      transition: border-color var(--transition);
+    }
+
+    .option-value-price-input:focus {
+      border-color: var(--accent);
+    }
+
+    .option-value-remove {
       background: none;
       border: none;
       cursor: pointer;
       color: var(--text-3);
-      font-size: 12px;
-      padding: 0 0 0 2px;
+      font-size: 13px;
+      padding: 0 0 0 4px;
       line-height: 1;
+      flex-shrink: 0;
       -webkit-tap-highlight-color: transparent;
     }
 
-    .option-value-chip button:hover {
+    .option-value-remove:hover {
       color: var(--red);
     }
 
@@ -616,6 +654,7 @@
       var gid = 'og_' + (++optionGroupCount);
       var name = groupData ? groupData.name : '';
       var values = groupData ? groupData.values : [];
+      var prices = groupData ? (groupData.prices || {}) : {};
       var defaultVal = groupData ? (groupData.default || '') : '';
 
       var div = document.createElement('div');
@@ -624,11 +663,11 @@
       div.innerHTML =
         '<button class="remove-group-btn" onclick="removeOptionGroup(\'' + gid + '\')">✕</button>' +
         '<div class="option-group-header">' +
-        '<input type="text" class="form-control option-group-name" placeholder="Nama grup (contoh: Suhu)" value="' + name + '" style="flex:1">' +
+        '<input type="text" class="form-control option-group-name" placeholder="Nama grup (contoh: Size)" value="' + name + '" style="flex:1">' +
         '<input type="text" class="form-control option-group-default" placeholder="Default" value="' + defaultVal + '" style="width:110px">' +
         '</div>' +
         '<div class="option-values-row" id="vals_' + gid + '">' +
-        values.map(function (v) { return makeValueChip(gid, v); }).join('') +
+        values.map(function (v) { return makeValueChip(gid, v, prices[v] || 0); }).join('') +
         '</div>' +
         '<div class="add-value-row">' +
         '<input type="text" class="form-control" id="newval_' + gid + '" placeholder="Tambah pilihan..." onkeydown="handleValueKey(event,\'' + gid + '\')">' +
@@ -637,9 +676,16 @@
       container.appendChild(div);
     }
 
-    function makeValueChip(gid, value) {
-      return '<div class="option-value-chip">' + value +
-        '<button onclick="removeValue(this)">✕</button>' +
+    // CHANGED: chip sekarang punya label + price input + remove btn
+    function makeValueChip(gid, value, price) {
+      price = price || 0;
+      return '<div class="option-value-chip">' +
+        '<span class="option-value-label">' + value + '</span>' +
+        '<div class="option-value-price-wrap">' +
+        '<span class="option-value-price-prefix">+Rp</span>' +
+        '<input type="number" class="option-value-price-input" value="' + price + '" min="0" step="500" placeholder="0">' +
+        '</div>' +
+        '<button class="option-value-remove" onclick="removeValue(this)">✕</button>' +
         '</div>';
     }
 
@@ -658,7 +704,7 @@
       if (!val) return;
       var container = document.getElementById('vals_' + gid);
       var chip = document.createElement('div');
-      chip.innerHTML = makeValueChip(gid, val);
+      chip.innerHTML = makeValueChip(gid, val, 0);
       container.appendChild(chip.firstChild);
       input.value = '';
       input.focus();
@@ -666,7 +712,7 @@
 
     function removeValue(btn) { btn.parentElement.remove(); }
 
-    // Collect all option groups from UI
+    // CHANGED: collectOptions sekarang juga kumpulkan prices per value
     function collectOptions() {
       var groups = document.querySelectorAll('#optionGroups .option-group');
       var result = [];
@@ -675,13 +721,20 @@
         var defVal = g.querySelector('.option-group-default').value.trim();
         var chips = g.querySelectorAll('.option-value-chip');
         var values = [];
+        var prices = {};
         chips.forEach(function (c) {
-          // text node is first child
-          var text = c.childNodes[0].textContent.trim();
-          if (text) values.push(text);
+          var label = c.querySelector('.option-value-label');
+          var priceInput = c.querySelector('.option-value-price-input');
+          if (!label) return;
+          var text = label.textContent.trim();
+          var price = priceInput ? Number(priceInput.value) || 0 : 0;
+          if (text) {
+            values.push(text);
+            prices[text] = price;
+          }
         });
         if (name && values.length) {
-          var group = { name: name, values: values };
+          var group = { name: name, values: values, prices: prices };
           if (defVal) group.default = defVal;
           result.push(group);
         }
@@ -689,7 +742,7 @@
       return result;
     }
 
-    // Populate option groups from existing data
+    // CHANGED: populateOptions pass prices ke addOptionGroup
     function populateOptions(options) {
       document.getElementById('optionGroups').innerHTML = '';
       optionGroupCount = 0;
@@ -697,6 +750,16 @@
     }
 
     /* ── Add / Edit ── */
+    // Default option groups shown on every new menu
+    var DEFAULT_OPTIONS = [
+      {
+        name: 'Size',
+        values: ['Regular', 'Large'],
+        prices: { Regular: 0, Large: 4000 },
+        default: 'Regular',
+      }
+    ];
+
     function openAddModal() {
       document.getElementById('menuModalTitle').textContent = 'Tambah Menu';
       document.getElementById('editMenuId').value = '';
@@ -705,7 +768,7 @@
       document.getElementById('menuDesc').value = '';
       document.getElementById('menuImageUrl').value = '';
       document.getElementById('menuCategory').value = 'Coffee';
-      populateOptions([]);
+      populateOptions(DEFAULT_OPTIONS);
       openModal('menuModal');
     }
 
