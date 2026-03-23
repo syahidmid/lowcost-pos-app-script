@@ -78,6 +78,20 @@ components/
   - Pill filter di tab Antrian (Home) dan halaman Queue menyesuaikan: Semua · Pending · Diproses · Selesai · Belum Bayar · Lunas
   - `OrderService` validasi transisi status yang diizinkan
   - `renderOrderCard()` di `OrderCard.html` tampilkan tombol aksi sesuai status baru
+- [ ] **Halaman Menu Publik (Customer Facing)** — halaman yang bisa diakses customer via QR code, tanpa login
+  - `pages/Menu.html` — tampilkan daftar menu per kategori, lengkap dengan foto, deskripsi, harga, dan opsi
+  - Customer bisa browse menu, pilih item + opsi, dan submit order langsung dari HP
+  - URL publik terpisah dari dashboard admin, di-serve via `doGet` dengan route `?page=menu&store=xxx`
+  - Tidak ada akses ke data order/antrian/analytics — read-only untuk menu, write-only untuk submit order
+  - Design mobile-first, ringan, bisa dibuka tanpa install apapun (seperti ESB Order)
+  - `Code.js` routing: deteksi parameter `page=menu` → serve halaman publik tanpa sidebar/auth
+- [ ] **Login Admin** — proteksi dashboard dari akses tidak sah
+  - `pages/Login.html` — form username + password, jadi landing page default sebelum masuk dashboard
+  - Kredensial disimpan di sheet Settings atau di `Config.js` (hashed)
+  - Setelah login berhasil, session disimpan di `PropertiesService` atau via token di URL parameter
+  - Semua route dashboard cek session — redirect ke Login jika belum auth
+  - `SettingsService` sediakan `validateLogin(user, pass)` dan `createSession()` / `destroySession()`
+  - Tambahkan tombol **Logout** di Sidebar
 - [ ] Notifikasi audio saat ada order masuk baru di tab Antrian
 - [ ] Struk/receipt sederhana setelah order dikonfirmasi
 - [ ] Analytics breakdown per opsi (contoh: Espresso Panas Large terjual berapa)
