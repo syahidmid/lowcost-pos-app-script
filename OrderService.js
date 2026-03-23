@@ -61,9 +61,9 @@ const OrderService = (() => {
       qty: Number(row[CI.QTY - 1]),
       unitPrice: Number(row[CI.UNIT_PRICE - 1]),
       subtotal: Number(row[CI.SUBTOTAL - 1]),
-      notes: descObj.notes || '',     // catatan teks bebas
+      notes: descObj.notes || '',         // catatan teks bebas
       options: descObj.options || {},     // { "Suhu": "Panas", "Size": "Large" }
-      description: descRaw,                   // raw JSON string, untuk analytics
+      description: descRaw,              // raw JSON string, untuk analytics
     };
   }
 
@@ -133,10 +133,10 @@ const OrderService = (() => {
         payload.customerName || '',
       ));
 
-      // Write order items — include description JSON
-      payload.items.forEach(item => {
+      // ✅ FIX #2 — build semua item rows dulu, tulis SEKALI (1 API call)
+      const itemRows = payload.items.map(item => {
         const descJson = _buildItemDescription(item);
-        SpreadsheetService.appendRow(SI, [
+        return [
           SpreadsheetService.generateId('ITM'),
           orderId,
           item.menuId,
@@ -144,9 +144,10 @@ const OrderService = (() => {
           Number(item.qty),
           Number(item.unitPrice),
           Number(item.unitPrice) * Number(item.qty),
-          descJson, // col 8 — JSON string or empty
-        ]);
+          descJson,
+        ];
       });
+      SpreadsheetService.appendRows(SI, itemRows);
 
       return { success: true, orderId, total };
     } catch (e) {
@@ -204,18 +205,13 @@ const OrderService = (() => {
         existing.customerName,
       ));
 
-      // 2. Delete existing order items
-      const allItems = SpreadsheetService.getAllRows(SI);
-      allItems.forEach(row => {
-        if (String(row[CI.ORDER_ID - 1]) === String(orderId)) {
-          SpreadsheetService.deleteRow(SI, CI.ID, String(row[CI.ID - 1]));
-        }
-      });
+      // 2. ✅ FIX #2 — delete semua item lama sekaligus (1x baca sheet)
+      SpreadsheetService.deleteRowsByOrderId(SI, CI.ORDER_ID, orderId);
 
-      // 3. Re-insert updated items
-      payload.items.forEach(item => {
+      // 3. ✅ FIX #2 — insert semua item baru sekaligus (1 API call)
+      const itemRows = payload.items.map(item => {
         const descJson = _buildItemDescription(item);
-        SpreadsheetService.appendRow(SI, [
+        return [
           SpreadsheetService.generateId('ITM'),
           orderId,
           item.menuId,
@@ -224,8 +220,9 @@ const OrderService = (() => {
           Number(item.unitPrice),
           Number(item.unitPrice) * Number(item.qty),
           descJson,
-        ]);
+        ];
       });
+      SpreadsheetService.appendRows(SI, itemRows);
 
       return { success: true, orderId, total };
     } catch (e) {
@@ -242,9 +239,21 @@ const OrderService = (() => {
     return order;
   }
 
+  // ✅ FIX #1 — baca ORDER_ITEMS sekali, group di memory (bukan N+1 query)
   function getActiveOrdersWithItems() {
-    return getActiveOrders()
-      .map(o => ({ ...o, items: getItemsByOrderId(o.orderId) }))
+    const activeOrders = getActiveOrders();
+    if (!activeOrders.length) return [];
+
+    const allItemRows = SpreadsheetService.getAllRows(SI).map(_itemRowToObj);
+
+    const itemsByOrder = {};
+    allItemRows.forEach(item => {
+      if (!itemsByOrder[item.orderId]) itemsByOrder[item.orderId] = [];
+      itemsByOrder[item.orderId].push(item);
+    });
+
+    return activeOrders
+      .map(o => ({ ...o, items: itemsByOrder[o.orderId] || [] }))
       .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
   }
 

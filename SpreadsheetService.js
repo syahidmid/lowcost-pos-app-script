@@ -4,23 +4,36 @@
 
 const SpreadsheetService = (() => {
 
-  // ── Spreadsheet accessor ──────────────────────────────────
+  // ── Singleton cache — hanya buka spreadsheet SEKALI per eksekusi ──
+  let _ss = null;
+  let _sheetCache = {};
+
   function getSpreadsheet() {
+    if (_ss) return _ss; // ✅ langsung return kalau sudah ada
+
     const active = SpreadsheetApp.getActiveSpreadsheet();
-    if (active) return active;
+    if (active) { _ss = active; return _ss; }
 
     const props = PropertiesService.getScriptProperties();
     const storedId = props.getProperty('SPREADSHEET_ID');
     if (storedId) {
-      try { return SpreadsheetApp.openById(storedId); } catch (e) { }
+      try { _ss = SpreadsheetApp.openById(storedId); return _ss; } catch (e) { }
     }
 
     const newSs = SpreadsheetApp.create(CONFIG.APP_NAME + ' Database');
     props.setProperty('SPREADSHEET_ID', newSs.getId());
-    return newSs;
+    _ss = newSs;
+    return _ss;
   }
 
-  // ── Sheet helper ──────────────────────────────────────────
+  // ── Sheet helper — cache per nama ─────────────────────────
+
+  function getSheet(name) {
+    if (_sheetCache[name]) return _sheetCache[name]; // ✅ dari cache
+    const sheet = getSpreadsheet().getSheetByName(name);
+    if (sheet) _sheetCache[name] = sheet;
+    return sheet;
+  }
 
   function getOrCreateSheet(name, headers) {
     const ss = getSpreadsheet();
@@ -36,6 +49,7 @@ const SpreadsheetService = (() => {
         sheet.setFrozenRows(1);
       }
     }
+    _sheetCache[name] = sheet; // ✅ cache hasil
     return sheet;
   }
 
@@ -65,7 +79,7 @@ const SpreadsheetService = (() => {
   // ── Generic read ──────────────────────────────────────────
 
   function getAllRows(sheetName) {
-    const sheet = getSpreadsheet().getSheetByName(sheetName);
+    const sheet = getSheet(sheetName); // ✅ dari cache
     if (!sheet) return [];
     const lastRow = sheet.getLastRow();
     if (lastRow < 2) return [];
@@ -80,13 +94,23 @@ const SpreadsheetService = (() => {
   // ── Generic write ─────────────────────────────────────────
 
   function appendRow(sheetName, rowData) {
-    const sheet = getSpreadsheet().getSheetByName(sheetName);
+    const sheet = getSheet(sheetName); // ✅ dari cache
     if (!sheet) throw new Error(`Sheet "${sheetName}" not found`);
     sheet.appendRow(rowData);
   }
 
+  // ✅ BARU — batch write, semua rows dalam 1 API call
+  function appendRows(sheetName, rowsData) {
+    if (!rowsData || !rowsData.length) return;
+    const sheet = getSheet(sheetName); // ✅ dari cache
+    if (!sheet) throw new Error(`Sheet "${sheetName}" not found`);
+    const lastRow = sheet.getLastRow();
+    sheet.getRange(lastRow + 1, 1, rowsData.length, rowsData[0].length)
+      .setValues(rowsData);
+  }
+
   function updateRow(sheetName, idCol, id, newRowData) {
-    const sheet = getSpreadsheet().getSheetByName(sheetName);
+    const sheet = getSheet(sheetName); // ✅ dari cache
     if (!sheet) return false;
     const data = sheet.getDataRange().getValues();
     for (let i = 1; i < data.length; i++) {
@@ -99,7 +123,7 @@ const SpreadsheetService = (() => {
   }
 
   function deleteRow(sheetName, idCol, id) {
-    const sheet = getSpreadsheet().getSheetByName(sheetName);
+    const sheet = getSheet(sheetName); // ✅ dari cache
     if (!sheet) return false;
     const data = sheet.getDataRange().getValues();
     for (let i = data.length - 1; i >= 1; i--) {
@@ -111,8 +135,21 @@ const SpreadsheetService = (() => {
     return false;
   }
 
+  // ✅ BARU — delete semua rows by orderId dalam 1 kali baca sheet
+  function deleteRowsByOrderId(sheetName, orderIdCol, orderId) {
+    const sheet = getSheet(sheetName); // ✅ dari cache
+    if (!sheet) return;
+    const data = sheet.getDataRange().getValues();
+    // loop dari bawah supaya index tidak geser saat delete
+    for (let i = data.length - 1; i >= 1; i--) {
+      if (String(data[i][orderIdCol - 1]) === String(orderId)) {
+        sheet.deleteRow(i + 1);
+      }
+    }
+  }
+
   function updateCellByKey(sheetName, keyCol, key, valueCol, value) {
-    const sheet = getSpreadsheet().getSheetByName(sheetName);
+    const sheet = getSheet(sheetName); // ✅ dari cache
     if (!sheet) return false;
     const data = sheet.getDataRange().getValues();
     for (let i = 1; i < data.length; i++) {
@@ -138,6 +175,8 @@ const SpreadsheetService = (() => {
     getAllRows,
     getRowById,
     appendRow,
+    appendRows,           // ✅ baru
+    deleteRowsByOrderId,  // ✅ baru
     updateRow,
     deleteRow,
     updateCellByKey,

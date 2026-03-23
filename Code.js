@@ -69,6 +69,16 @@ function apiGetHourlyRevenue(date) { return JSON.stringify(AnalyticsService.getH
 function apiGetSettings() { return JSON.stringify(SettingsService.getAll()); }
 function apiSaveSettings(dataJson) { return JSON.stringify(SettingsService.setAll(JSON.parse(dataJson))); }
 
+// ── ✅ Initial data — gabung settings + menus + orders dalam 1 call ──
+
+function apiGetInitialData() {
+  return JSON.stringify({
+    settings: SettingsService.getAll(),
+    menus: MenuService.getAvailable(),
+    orders: OrderService.getActiveOrdersWithItems(),
+  });
+}
+
 // ── Utility ───────────────────────────────────────────────
 
 function apiGetConfig() {

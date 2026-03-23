@@ -57,6 +57,7 @@ components/
   - [x] Tombol **Edit Pesanan** di order card — bisa tambah item baru ke order yang sudah ada (status pending/preparing)
   - [x] Edit pesanan bisa dipanggil dari tab Antrian di Home maupun halaman Queue
 - [ ] Migrasi navigasi ke SPA (show/hide div) untuk performa lebih smooth
+- [ ] Add new category di Menu Manager
 
 ### Fitur
 - [ ] **Edit Pesanan** — flow lengkap:

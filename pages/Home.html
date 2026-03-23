@@ -12,9 +12,6 @@
       overflow: hidden;
     }
 
-    /* ══════════════════════════════════════
-       MAIN TABS — Menu | Antrian
-    ══════════════════════════════════════ */
     .main-tabs {
       display: flex;
       background: var(--bg-2);
@@ -63,7 +60,6 @@
       display: inline-block;
     }
 
-    /* ── Left column ── */
     .pos-left {
       flex: 1;
       display: flex;
@@ -72,7 +68,6 @@
       min-width: 0;
     }
 
-    /* ── Section panels ── */
     .section-panel {
       flex: 1;
       display: flex;
@@ -84,9 +79,6 @@
       display: none;
     }
 
-    /* ══════════════════════════════════════
-       MENU PANEL
-    ══════════════════════════════════════ */
     .cat-pills {
       display: flex;
       gap: 6px;
@@ -215,9 +207,6 @@
       justify-content: center;
     }
 
-    /* ══════════════════════════════════════
-       ANTRIAN PANEL
-    ══════════════════════════════════════ */
     .queue-pills {
       display: flex;
       gap: 6px;
@@ -305,6 +294,63 @@
       border-left: 3px solid var(--amber);
     }
 
+    /* ── Sync badge ── */
+    .sync-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      background: #fef3c7;
+      color: #d97706;
+      border: 1px solid rgba(217, 119, 6, 0.2);
+      border-radius: 8px;
+      padding: 2px 7px;
+      margin-left: 6px;
+      vertical-align: middle;
+      animation: pulse-sync 1.4s ease-in-out infinite;
+    }
+
+    .sync-badge.error {
+      background: #fee2e2;
+      color: #dc2626;
+      border-color: rgba(220, 38, 38, 0.2);
+      animation: none;
+    }
+
+    @keyframes pulse-sync {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.45;
+      }
+    }
+
+    /* ── Sync bar global ── */
+    .sync-bar {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 9999;
+      background: #d97706;
+      color: #fff;
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 5px 16px;
+      text-align: center;
+      letter-spacing: 0.2px;
+    }
+
+    .sync-bar.visible {
+      display: block;
+    }
+
     .qcard-top {
       display: flex;
       align-items: flex-start;
@@ -350,12 +396,6 @@
       font-weight: 500;
     }
 
-    .qcard-chip-desc {
-      font-size: 11px;
-      color: var(--accent);
-      margin-top: 1px;
-    }
-
     .qcard-footer {
       display: flex;
       align-items: center;
@@ -374,9 +414,6 @@
       gap: 6px;
     }
 
-    /* ══════════════════════════════════════
-       CART
-    ══════════════════════════════════════ */
     .cart-fab {
       display: none;
       position: fixed;
@@ -579,7 +616,6 @@
       background: var(--bg-2);
     }
 
-    /* CHANGED: from grid 2-col to flex column (2 baris) */
     .customer-row {
       display: flex;
       flex-direction: column;
@@ -609,7 +645,6 @@
       color: var(--accent);
     }
 
-    /* ── Item Modal ── */
     .item-modal-icon {
       width: 64px;
       height: 64px;
@@ -707,16 +742,6 @@
       transition: var(--transition);
       -webkit-tap-highlight-color: transparent;
       user-select: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .option-pill .pill-price {
-      font-size: 10.5px;
-      font-weight: 500;
-      opacity: 0.72;
-      letter-spacing: 0;
     }
 
     .option-pill.selected {
@@ -730,7 +755,6 @@
       transform: scale(0.96);
     }
 
-    /* ── Checkout Modal ── */
     .checkout-section {
       margin-bottom: 16px;
     }
@@ -808,9 +832,6 @@
       box-shadow: 0 2px 8px rgba(59, 91, 252, 0.28);
     }
 
-    /* ══════════════════════════════════════
-       DESKTOP ≥ 768px
-    ══════════════════════════════════════ */
     @media (min-width: 768px) {
       .home-body {
         display: grid;
@@ -827,18 +848,12 @@
         max-width: 320px;
       }
 
-      .cat-pills {
-        padding: 10px 24px;
-      }
-
+      .cat-pills,
       .queue-pills {
         padding: 10px 24px;
       }
 
-      .menu-grid-wrap {
-        padding: 16px 24px;
-      }
-
+      .menu-grid-wrap,
       .queue-grid-wrap {
         padding: 16px 24px;
       }
@@ -918,6 +933,10 @@
 </head>
 
 <body>
+
+  <!-- Global sync indicator bar -->
+  <div class="sync-bar" id="syncBar">⏳ Menyinkronkan pesanan ke server...</div>
+
   <div class="app-shell">
     <?!= include('components/Sidebar') ?>
 
@@ -932,22 +951,15 @@
       </div>
 
       <div class="home-body">
-
-        <!-- LEFT: Main tabs + content panels -->
         <div class="pos-left">
-
-          <!-- Main tabs: Menu | Antrian -->
           <div class="main-tabs">
-            <div class="main-tab active" onclick="switchMainTab('menu', this)">
-              Menu
-            </div>
+            <div class="main-tab active" onclick="switchMainTab('menu', this)">Menu</div>
             <div class="main-tab" onclick="switchMainTab('queue', this)">
               Antrian
               <span class="main-tab-badge" id="queueBadge">0</span>
             </div>
           </div>
 
-          <!-- MENU PANEL -->
           <div class="section-panel" id="panel-menu">
             <div class="cat-pills">
               <div class="cat-pill active" onclick="switchCat('all',this)">Semua</div>
@@ -965,7 +977,6 @@
             </div>
           </div>
 
-          <!-- ANTRIAN PANEL -->
           <div class="section-panel hidden" id="panel-queue">
             <div class="queue-pills">
               <div class="queue-pill active" onclick="switchQueueFilter('all',this)">
@@ -987,10 +998,8 @@
               </div>
             </div>
           </div>
-
         </div>
 
-        <!-- RIGHT: Cart Panel -->
         <div class="cart-panel" id="cartPanel">
           <div class="cart-drag-handle"></div>
           <div class="cart-header">
@@ -1009,7 +1018,6 @@
             </div>
           </div>
           <div class="cart-footer">
-            <!-- CHANGED: 2 baris (flex column), nama wajib -->
             <div class="customer-row">
               <div>
                 <label class="form-label">Nama <span style="color:var(--red)">*</span></label>
@@ -1031,20 +1039,17 @@
             </button>
           </div>
         </div>
-
       </div>
     </div>
   </div>
 
-  <!-- Backdrop -->
   <div class="cart-drawer-overlay" id="cartDrawerOverlay" onclick="closeCartDrawer()"></div>
 
-  <!-- FAB -->
   <button class="cart-fab" id="cartFab" onclick="openCartDrawer()">
     Pesanan <span class="cart-fab-count" id="cartFabCount">0</span>
   </button>
 
-  <!-- ── Item Modal ── -->
+  <!-- Item Modal -->
   <div class="modal-overlay" id="itemModal" onclick="closeModalOnOverlay(event,'itemModal')">
     <div class="modal" style="max-width:380px;text-align:center">
       <button class="modal-close" style="margin-left:auto;margin-bottom:10px;display:block"
@@ -1062,13 +1067,12 @@
         <label class="form-label">Catatan item</label>
         <input type="text" class="form-control" id="modalNotes" placeholder="Tambahan, permintaan khusus...">
       </div>
-      <button class="btn btn-primary btn-lg btn-block" style="margin-top:14px" onclick="addToCart()">
-        Tambah ke Pesanan
-      </button>
+      <button class="btn btn-primary btn-lg btn-block" style="margin-top:14px" onclick="addToCart()">Tambah ke
+        Pesanan</button>
     </div>
   </div>
 
-  <!-- ── Checkout Modal ── -->
+  <!-- Checkout Modal -->
   <div class="modal-overlay" id="checkoutModal" onclick="closeModalOnOverlay(event,'checkoutModal')">
     <div class="modal" style="max-width:440px">
       <div class="modal-header">
@@ -1105,6 +1109,7 @@
 
   <?!= include('components/Scripts') ?>
   <?!= include('components/OrderCard') ?>
+
   <script>
     var allMenus = [];
     var allOrders = [];
@@ -1120,16 +1125,134 @@
     var selectedOptions = {};
     var PAYMENT_OPTIONS = ['Cash', 'QRIS', 'Transfer'];
 
+    // ══════════════════════════════════════
+    // LOCAL-FIRST SYNC ENGINE
+    // ══════════════════════════════════════
+    var PENDING_KEY = 'pos_pending_orders';
+    var syncInProgress = false;
+
+    function getPendingOrders() {
+      try { return JSON.parse(localStorage.getItem(PENDING_KEY) || '[]'); }
+      catch (e) { return []; }
+    }
+
+    function savePendingOrders(list) {
+      localStorage.setItem(PENDING_KEY, JSON.stringify(list));
+    }
+
+    function addPendingOrder(order) {
+      var list = getPendingOrders();
+      list.push(order);
+      savePendingOrders(list);
+      updateSyncBar();
+    }
+
+    function removePendingOrder(tempId) {
+      var list = getPendingOrders().filter(function (o) { return o._tempId !== tempId; });
+      savePendingOrders(list);
+      updateSyncBar();
+    }
+
+    function updateSyncBar() {
+      var pending = getPendingOrders();
+      var bar = document.getElementById('syncBar');
+      if (pending.length > 0) {
+        bar.textContent = '⏳ Menyinkronkan ' + pending.length + ' pesanan ke server...';
+        bar.classList.add('visible');
+      } else {
+        bar.classList.remove('visible');
+      }
+      renderQueueGrid();
+    }
+
+    // ✅ Toast sukses muncul DI SINI — setelah sync berhasil
+    function syncOrder(pendingOrder) {
+      return new Promise(function (resolve, reject) {
+        gasCall('apiCreateOrder', JSON.stringify(pendingOrder.payload))
+          .then(function (res) {
+            if (res.success) {
+              // Update orderId di allOrders dari tempId ke orderId asli
+              var idx = allOrders.findIndex(function (o) { return o.orderId === pendingOrder._tempId; });
+              if (idx !== -1) {
+                allOrders[idx].orderId = res.orderId;
+                allOrders[idx]._synced = true;
+                allOrders[idx]._tempId = null;
+              }
+              removePendingOrder(pendingOrder._tempId);
+
+              // ✅ Toast sukses baru muncul setelah sync selesai
+              var label = pendingOrder.customerLabel ? ' untuk ' + pendingOrder.customerLabel : '';
+              Toast.success('Pesanan' + label + ' berhasil disimpan!');
+
+              resolve();
+            } else {
+              reject(new Error(res.error));
+            }
+          })
+          .catch(reject);
+      });
+    }
+
+    function runSync() {
+      if (syncInProgress) return;
+      var pending = getPendingOrders();
+      if (!pending.length) return;
+
+      syncInProgress = true;
+
+      function syncNext(list) {
+        if (!list.length) {
+          syncInProgress = false;
+          loadQueue(); // refresh dari server setelah semua selesai
+          return;
+        }
+        syncOrder(list[0])
+          .then(function () { syncNext(list.slice(1)); })
+          .catch(function () {
+            // Tandai error di card
+            var idx = allOrders.findIndex(function (o) { return o.orderId === list[0]._tempId; });
+            if (idx !== -1) allOrders[idx]._syncError = true;
+            renderQueueGrid();
+            // ✅ Toast error
+            Toast.error('Gagal menyimpan pesanan, mencoba ulang...');
+            syncInProgress = false;
+            setTimeout(runSync, 10000); // retry 10 detik
+          });
+      }
+
+      syncNext(pending);
+    }
+
+    // ══════════════════════════════════════
+    // PAGE INIT
+    // ══════════════════════════════════════
     window.addEventListener('load', function () {
       checkMobile();
       window.addEventListener('resize', checkMobile);
       document.getElementById('headerDate').textContent = new Date().toLocaleDateString('id-ID', {
         weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
       });
-      loadSettings();
-      loadMenus();
-      loadQueue();
-      setInterval(loadQueue, 20000);
+
+      // ✅ 1 gasCall gantikan 3 call terpisah
+      gasCall('apiGetInitialData').then(function (data) {
+        taxRate = Number(data.settings.tax_rate || 0);
+        cashier = data.settings.cashier_name || 'Kasir';
+        if (taxRate > 0) document.getElementById('taxRow').style.display = 'flex';
+        document.getElementById('taxPct').textContent = taxRate;
+
+        allMenus = data.menus;
+        renderMenuGrid(currentCat);
+
+        allOrders = data.orders;
+        updateQueueBadges();
+        updateSyncBar(); // restore pending dari localStorage kalau ada
+        runSync();       // sync ulang kalau ada pending yang belum terkirim
+      }).catch(function () { Toast.error('Gagal memuat data'); });
+
+      // Auto refresh — skip kalau masih ada pending
+      setInterval(function () {
+        if (!getPendingOrders().length) loadQueue();
+      }, 20000);
     });
 
     function checkMobile() {
@@ -1145,7 +1268,6 @@
     function openCartDrawer() { document.getElementById('cartPanel').classList.add('open'); document.getElementById('cartDrawerOverlay').classList.add('open'); }
     function closeCartDrawer() { document.getElementById('cartPanel').classList.remove('open'); document.getElementById('cartDrawerOverlay').classList.remove('open'); }
 
-    /* ── Main tab switch ── */
     function switchMainTab(tab, el) {
       currentMainTab = tab;
       document.querySelectorAll('.main-tab').forEach(function (t) { t.classList.remove('active'); });
@@ -1154,30 +1276,25 @@
       document.getElementById('panel-queue').classList.toggle('hidden', tab !== 'queue');
     }
 
-    /* ── Payment ── */
     function renderPaymentPills() {
       document.getElementById('paymentPills').innerHTML = PAYMENT_OPTIONS.map(function (p) {
         return '<div class="payment-pill-btn ' + (p === selectedPayment ? 'active' : '') + '" onclick="selectPayment(\'' + p + '\')">' + p + '</div>';
       }).join('');
     }
+
     function selectPayment(m) { selectedPayment = m; renderPaymentPills(); }
 
-    /* ── Settings ── */
-    function loadSettings() {
-      gasCall('apiGetSettings').then(function (s) {
-        taxRate = Number(s.tax_rate || 0);
-        cashier = s.cashier_name || 'Kasir';
-        if (taxRate > 0) document.getElementById('taxRow').style.display = 'flex';
-        document.getElementById('taxPct').textContent = taxRate;
-      });
-    }
-
-    /* ══════════════════════════════════════
-       QUEUE
-    ══════════════════════════════════════ */
+    // ══════════════════════════════════════
+    // QUEUE
+    // ══════════════════════════════════════
     function loadQueue() {
       gasCall('apiGetActiveOrders').then(function (orders) {
-        allOrders = orders;
+        // Pertahankan order lokal yang belum sync
+        var stillPending = getPendingOrders().map(function (p) { return p._tempId; });
+        var localOnly = allOrders.filter(function (o) {
+          return o._tempId && stillPending.includes(o._tempId);
+        });
+        allOrders = orders.concat(localOnly);
         updateQueueBadges();
         renderQueueGrid();
       }).catch(function () { Toast.error('Gagal memuat antrian'); });
@@ -1207,29 +1324,41 @@
       var filtered = currentQFilter === 'all'
         ? allOrders
         : allOrders.filter(function (o) { return o.status === currentQFilter; });
+
       if (!filtered.length) {
         grid.innerHTML = '<div class="empty-state"><span class="empty-icon">🎉</span><p>Tidak ada pesanan ' + (currentQFilter === 'all' ? 'aktif' : currentQFilter) + '</p></div>';
         return;
       }
+
       grid.innerHTML = filtered.map(function (o) {
-        return renderOrderCard(o, 'homeUpdateQueueStatus', 'openEditOrder');
+        // Inject sync badge ke nama customer kalau masih pending sync
+        var syncBadge = '';
+        if (o._tempId && !o._synced) {
+          syncBadge = o._syncError
+            ? '<span class="sync-badge error">❌ Gagal</span>'
+            : '<span class="sync-badge">⏳ Syncing</span>';
+        }
+        var card = renderOrderCard(o, 'homeUpdateQueueStatus', 'openEditOrder');
+        if (syncBadge) {
+          card = card.replace(/(<div class="qcard-customer">)(.*?)(<\/div>)/, '$1$2' + syncBadge + '$3');
+        }
+        return card;
       }).join('');
     }
 
     function homeUpdateQueueStatus(orderId, status) {
+      // Cegah aksi pada order yang belum selesai sync
+      var order = allOrders.find(function (o) { return o.orderId === orderId; });
+      if (order && order._tempId && !order._synced) {
+        Toast.info('Pesanan masih sync, tunggu sebentar');
+        return;
+      }
       updateOrderStatus(orderId, status, loadQueue);
     }
 
-    /* ══════════════════════════════════════
-       MENU
-    ══════════════════════════════════════ */
-    function loadMenus() {
-      gasCall('apiGetAvailableMenus').then(function (menus) {
-        allMenus = menus;
-        renderMenuGrid(currentCat);
-      }).catch(function () { Toast.error('Gagal memuat menu'); });
-    }
-
+    // ══════════════════════════════════════
+    // MENU
+    // ══════════════════════════════════════
     var CAT_EMOJI = { Coffee: '☕', 'No Coffee': '🥤', Snack: '🍩' };
     function menuEmoji(cat) { return CAT_EMOJI[cat] || '🍽️'; }
 
@@ -1259,46 +1388,16 @@
       renderMenuGrid(cat);
     }
 
-    /* ══════════════════════════════════════
-       ITEM MODAL
-    ══════════════════════════════════════ */
-    // Hitung unitPrice = base price + total modifier dari selectedOptions
-    function calcUnitPrice(menu, opts) {
-      var base = menu.price;
-      var modifier = 0;
-      (menu.options || []).forEach(function (g) {
-        var chosen = opts[g.name];
-        if (chosen && g.prices && g.prices[chosen]) {
-          modifier += Number(g.prices[chosen]) || 0;
-        }
-      });
-      return base + modifier;
-    }
-
-    // Hitung total modifier saja (untuk tampil di label harga modal)
-    function calcModifier(menu, opts) {
-      var modifier = 0;
-      (menu.options || []).forEach(function (g) {
-        var chosen = opts[g.name];
-        if (chosen && g.prices && g.prices[chosen]) {
-          modifier += Number(g.prices[chosen]) || 0;
-        }
-      });
-      return modifier;
-    }
-
-    function updateModalPrice() {
-      if (!selectedMenu) return;
-      var unitPrice = calcUnitPrice(selectedMenu, selectedOptions);
-      document.getElementById('modalPrice').textContent = formatIDR(unitPrice);
-    }
-
+    // ══════════════════════════════════════
+    // ITEM MODAL
+    // ══════════════════════════════════════
     function openItemModal(menuId) {
       var m = allMenus.find(function (x) { return x.id === menuId; });
       if (!m) return;
       selectedMenu = m; selectedOptions = {};
       document.getElementById('modalIcon').textContent = menuEmoji(m.category);
       document.getElementById('modalName').textContent = m.name;
+      document.getElementById('modalPrice').textContent = formatIDR(m.price);
       document.getElementById('modalNotes').value = '';
       var existing = cart.find(function (c) { return c.menuId === m.id; });
       document.getElementById('modalQty').textContent = existing ? existing.qty : 1;
@@ -1310,7 +1409,6 @@
         });
       }
       renderModalOptions(m.options || []);
-      updateModalPrice();
       openModal('itemModal');
     }
 
@@ -1319,13 +1417,7 @@
       if (!options || !options.length) { container.innerHTML = ''; return; }
       container.innerHTML = options.map(function (g) {
         var pills = g.values.map(function (v) {
-          var modifier = (g.prices && g.prices[v]) ? Number(g.prices[v]) : 0;
-          var priceLabel = modifier > 0
-            ? '<span class="pill-price">+' + formatIDR(modifier) + '</span>'
-            : '';
-          return '<div class="option-pill ' + (selectedOptions[g.name] === v ? 'selected' : '') + '" onclick="selectOption(\'' + g.name + '\',\'' + v + '\')">' +
-            '<span>' + v + '</span>' + priceLabel +
-            '</div>';
+          return '<div class="option-pill ' + (selectedOptions[g.name] === v ? 'selected' : '') + '" onclick="selectOption(\'' + g.name + '\',\'' + v + '\')">' + v + '</div>';
         }).join('');
         return '<div class="option-section"><div class="option-section-label">' + g.name + '</div>' +
           '<div class="option-pills" id="pills_' + g.name.replace(/\s/g, '_') + '">' + pills + '</div></div>';
@@ -1339,15 +1431,8 @@
       var group = (selectedMenu.options || []).find(function (g) { return g.name === groupName; });
       if (!group) return;
       container.innerHTML = group.values.map(function (v) {
-        var modifier = (group.prices && group.prices[v]) ? Number(group.prices[v]) : 0;
-        var priceLabel = modifier > 0
-          ? '<span class="pill-price">+' + formatIDR(modifier) + '</span>'
-          : '';
-        return '<div class="option-pill ' + (selectedOptions[groupName] === v ? 'selected' : '') + '" onclick="selectOption(\'' + groupName + '\',\'' + v + '\')">' +
-          '<span>' + v + '</span>' + priceLabel +
-          '</div>';
+        return '<div class="option-pill ' + (selectedOptions[groupName] === v ? 'selected' : '') + '" onclick="selectOption(\'' + groupName + '\',\'' + v + '\')">' + v + '</div>';
       }).join('');
-      updateModalPrice();
     }
 
     function modalQtyChange(delta) {
@@ -1363,23 +1448,19 @@
       Object.keys(selectedOptions).forEach(function (k) { if (selectedOptions[k]) optParts.push(selectedOptions[k]); });
       if (manualNote) optParts.push(manualNote);
       var displayNotes = optParts.join(' · ');
-      // CHANGED: unitPrice = base + modifier dari selectedOptions
-      var unitPrice = calcUnitPrice(selectedMenu, selectedOptions);
       var existing = cart.find(function (c) { return c.menuId === selectedMenu.id; });
       if (existing) {
         existing.qty = qty; existing.notes = displayNotes;
         existing.manualNote = manualNote;
-        existing.unitPrice = unitPrice;
         existing.selectedOptions = JSON.parse(JSON.stringify(selectedOptions));
       } else {
-        cart.push({ menuId: selectedMenu.id, menuName: selectedMenu.name, qty: qty, unitPrice: unitPrice, notes: displayNotes, manualNote: manualNote, selectedOptions: JSON.parse(JSON.stringify(selectedOptions)), emoji: menuEmoji(selectedMenu.category) });
+        cart.push({ menuId: selectedMenu.id, menuName: selectedMenu.name, qty: qty, unitPrice: selectedMenu.price, notes: displayNotes, manualNote: manualNote, selectedOptions: JSON.parse(JSON.stringify(selectedOptions)), emoji: menuEmoji(selectedMenu.category) });
       }
       closeModal('itemModal');
       renderCart(); renderMenuGrid(currentCat);
       Toast.success(selectedMenu.name + ' ditambahkan');
     }
 
-    /* ── FAB ── */
     function updateFab() {
       var fab = document.getElementById('cartFab');
       var count = document.getElementById('cartFabCount');
@@ -1388,7 +1469,9 @@
       fab.style.display = (isMobile && total > 0) ? 'flex' : 'none';
     }
 
-    /* ── Cart ── */
+    // ══════════════════════════════════════
+    // CART
+    // ══════════════════════════════════════
     function renderCart() {
       var el = document.getElementById('cartItems');
       if (!cart.length) {
@@ -1406,13 +1489,11 @@
           '<div class="qty-btn" onclick="cartQty(' + idx + ',-1)">−</div>' +
           '<div class="qty-val">' + item.qty + '</div>' +
           '<div class="qty-btn" onclick="cartQty(' + idx + ',1)">+</div>' +
-          '</div>' +
-          '</div>' +
+          '</div></div>' +
           '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">' +
           '<div class="cart-item-subtotal">' + formatIDR(item.unitPrice * item.qty) + '</div>' +
           '<button class="btn btn-danger btn-sm" onclick="removeFromCart(' + idx + ')">✕</button>' +
-          '</div>' +
-          '</div>';
+          '</div></div>';
       }).join('');
       document.getElementById('checkoutBtn').disabled = false;
       updateTotals(); updateFab();
@@ -1420,6 +1501,7 @@
 
     function cartQty(idx, delta) { cart[idx].qty = Math.max(1, cart[idx].qty + delta); renderCart(); renderMenuGrid(currentCat); }
     function removeFromCart(idx) { cart.splice(idx, 1); renderCart(); renderMenuGrid(currentCat); }
+
     function clearCart() {
       cart = [];
       document.getElementById('customerName').value = '';
@@ -1427,6 +1509,7 @@
       renderCart(); renderMenuGrid(currentCat);
       if (isMobile) closeCartDrawer();
     }
+
     function updateTotals() {
       var sub = cart.reduce(function (s, i) { return s + i.unitPrice * i.qty; }, 0);
       var tax = sub * (taxRate / 100);
@@ -1435,18 +1518,17 @@
       document.getElementById('cartTotal').textContent = formatIDR(sub + tax);
     }
 
-    /* ── Checkout ── */
+    // ══════════════════════════════════════
+    // CHECKOUT — LOCAL FIRST
+    // ══════════════════════════════════════
     function checkout() {
       if (!cart.length) return;
-
-      // VALIDATION: nama wajib diisi
       var customerName = document.getElementById('customerName').value.trim();
       if (!customerName) {
         Toast.error('Nama pelanggan wajib diisi');
         document.getElementById('customerName').focus();
         return;
       }
-
       var tableNumber = document.getElementById('tableNumber').value.trim();
       var customerLabel = [customerName, tableNumber].filter(Boolean).join(' · ');
       var infoEl = document.getElementById('checkoutCustomerInfo');
@@ -1469,6 +1551,7 @@
       var customerName = document.getElementById('customerName').value.trim();
       var tableNumber = document.getElementById('tableNumber').value.trim();
       var customerLabel = [customerName, tableNumber].filter(Boolean).join(' · ');
+
       var payload = {
         items: cart.map(function (i) {
           return { menuId: i.menuId, menuName: i.menuName, qty: i.qty, unitPrice: i.unitPrice, notes: i.manualNote || '', selectedOptions: i.selectedOptions || {} };
@@ -1478,17 +1561,42 @@
         cashierName: cashier,
         customerName: customerLabel,
       };
+
+      // Generate tempId lokal
+      var tempId = 'TMP-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+      var sub = cart.reduce(function (s, i) { return s + i.unitPrice * i.qty; }, 0);
+      var tax = sub * (taxRate / 100);
+
+      // Simpan ke localStorage — sertakan customerLabel untuk toast nanti
+      addPendingOrder({ _tempId: tempId, payload: payload, customerLabel: customerLabel });
+
+      // Inject langsung ke antrian dengan badge syncing
+      allOrders.unshift({
+        orderId: tempId,
+        _tempId: tempId,
+        _synced: false,
+        _syncError: false,
+        customerName: customerLabel,
+        status: 'pending',
+        createdAt: new Date().toISOString(),
+        cashierName: cashier,
+        totalAmount: sub + tax,
+        paymentMethod: selectedPayment,
+        notes: payload.notes,
+        items: cart.map(function (i) {
+          return { menuId: i.menuId, menuName: i.menuName, qty: i.qty, unitPrice: i.unitPrice, subtotal: i.unitPrice * i.qty, description: '' };
+        }),
+      });
+
+      updateQueueBadges();
+      renderQueueGrid();
+
+      // ✅ Tutup modal & reset cart — tanpa toast, tanpa loading
       closeModal('checkoutModal');
-      Loader.show();
-      gasCall('apiCreateOrder', JSON.stringify(payload)).then(function (res) {
-        Loader.hide();
-        if (res.success) {
-          var label = customerLabel ? ' untuk ' + customerLabel : '';
-          Toast.success('Pesanan' + label + ' berhasil dibuat!');
-          clearCart();
-          loadQueue();
-        } else Toast.error('Gagal: ' + res.error);
-      }).catch(function () { Loader.hide(); Toast.error('Terjadi kesalahan'); });
+      clearCart();
+
+      // Kirim ke GAS di background — toast sukses muncul di syncOrder()
+      runSync();
     }
   </script>
 </body>
