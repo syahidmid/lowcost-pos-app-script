@@ -210,6 +210,22 @@
     transition: var(--transition);
     -webkit-tap-highlight-color: transparent;
     user-select: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .edit-item-option-pill .pill-price {
+    font-size: 10px;
+    font-weight: 600;
+    background: rgba(0, 0, 0, 0.10);
+    border-radius: 10px;
+    padding: 1px 6px;
+    white-space: nowrap;
+  }
+
+  .edit-item-option-pill.selected .pill-price {
+    background: rgba(255, 255, 255, 0.22);
   }
 
   .edit-item-option-pill.selected {
@@ -513,9 +529,11 @@
           optionGroups.map(function (g) {
             var pills = g.values.map(function (v) {
               var isSelected = (item.selectedOptions || {})[g.name] === v;
+              var modifier = (g.prices && g.prices[v]) ? Number(g.prices[v]) : 0;
+              var priceLabel = modifier > 0 ? '<span class="pill-price">+' + formatIDR(modifier) + '</span>' : '';
               return '<div class="edit-item-option-pill ' + (isSelected ? 'selected' : '') + '" ' +
                 'onclick="editItemOption(' + idx + ',\'' + g.name.replace(/'/g, "\\'") + '\',\'' + v.replace(/'/g, "\\'") + '\')">' +
-                v + '</div>';
+                '<span>' + v + '</span>' + priceLabel + '</div>';
             }).join('');
             return '<div class="edit-item-option-group">' +
               '<div class="edit-item-option-label">' + g.name + '</div>' +
@@ -576,13 +594,24 @@
   function editItemOption(idx, groupName, value) {
     if (!_editOrderItems[idx].selectedOptions) _editOrderItems[idx].selectedOptions = {};
     _editOrderItems[idx].selectedOptions[groupName] = value;
-    // Re-render only the pills for this group to avoid losing notes input focus
+
     var menus = typeof allMenus !== 'undefined' ? allMenus : [];
     var menuDef = menus.find(function (m) { return m.id === _editOrderItems[idx].menuId; });
     if (!menuDef) return;
+
+    // Recalculate unitPrice based on new selectedOptions
+    var base = menuDef.price;
+    var modifier = 0;
+    (menuDef.options || []).forEach(function (g) {
+      var chosen = _editOrderItems[idx].selectedOptions[g.name];
+      if (chosen && g.prices && g.prices[chosen]) modifier += Number(g.prices[chosen]) || 0;
+    });
+    _editOrderItems[idx].unitPrice = base + modifier;
+
     var group = (menuDef.options || []).find(function (g) { return g.name === groupName; });
     if (!group) return;
-    // Find the pill container for this group and re-render pills only
+
+    // Re-render pills only (avoid losing notes input focus)
     var allItems = document.querySelectorAll('.edit-order-item');
     if (!allItems[idx]) return;
     var pillContainers = allItems[idx].querySelectorAll('.edit-item-option-pills');
@@ -590,11 +619,18 @@
     if (pillContainers[groupIndex]) {
       pillContainers[groupIndex].innerHTML = group.values.map(function (v) {
         var isSelected = _editOrderItems[idx].selectedOptions[groupName] === v;
+        var mod = (group.prices && group.prices[v]) ? Number(group.prices[v]) : 0;
+        var priceLabel = mod > 0 ? '<span class="pill-price">+' + formatIDR(mod) + '</span>' : '';
         return '<div class="edit-item-option-pill ' + (isSelected ? 'selected' : '') + '" ' +
           'onclick="editItemOption(' + idx + ',\'' + groupName.replace(/'/g, "\\'") + '\',\'' + v.replace(/'/g, "\\'") + '\')">' +
-          v + '</div>';
+          '<span>' + v + '</span>' + priceLabel + '</div>';
       }).join('');
     }
+
+    // Update price display for this item
+    var priceEls = document.querySelectorAll('.edit-order-item-price');
+    if (priceEls[idx]) priceEls[idx].textContent = formatIDR(_editOrderItems[idx].unitPrice * _editOrderItems[idx].qty);
+    updateEditTotal();
   }
 
   function editItemDesc(idx, value) {
