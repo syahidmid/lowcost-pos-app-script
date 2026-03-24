@@ -500,11 +500,13 @@
     var menus = typeof allMenus !== 'undefined' ? allMenus : [];
 
     _editOrderItems = order.items.map(function (i) {
-      // Support dua format: raw description JSON atau field terpisah
+      // Parse description JSON kalau ada
       var descObj = {};
       try { if (i.description) descObj = JSON.parse(i.description); } catch (e) { }
 
-      var selectedOptions = descObj.options || i.options || {};
+      // ✅ Priority: descObj.options (dari server) → i.options (dari memory allOrders) → i.selectedOptions (dari optimistic local) → {}
+      var selectedOptions = descObj.options || i.options || i.selectedOptions || {};
+      var notes = descObj.notes || i.notes || '';
 
       // ✅ Recalculate unitPrice dari base + modifier opsi yang tersimpan
       var menuDef = menus.find(function (m) { return m.id === i.menuId; });
@@ -515,7 +517,7 @@
         menuName: i.menuName,
         qty: i.qty,
         unitPrice: unitPrice,
-        notes: descObj.notes || i.notes || '',
+        notes: notes,
         selectedOptions: selectedOptions,
         emoji: '🍽️',
       };
@@ -690,16 +692,74 @@
       }),
     };
 
+    // Snapshot data lama untuk rollback kalau sync gagal
+    var memOrders = (typeof allOrders !== 'undefined' ? allOrders : []);
+    var orderIdx = memOrders.findIndex(function (o) { return o.orderId === _editOrderId; });
+    var snapItems = orderIdx !== -1 ? JSON.parse(JSON.stringify(memOrders[orderIdx].items)) : null;
+    var snapTotal = orderIdx !== -1 ? memOrders[orderIdx].totalAmount : null;
+    var customerLabel = orderIdx !== -1 ? (memOrders[orderIdx].customerName || '') : '';
+
+    // ✅ Update allOrders di memory — optimistic
+    if (orderIdx !== -1) {
+      var newTotal = _editOrderItems.reduce(function (s, i) { return s + i.unitPrice * i.qty; }, 0);
+      memOrders[orderIdx].items = _editOrderItems.map(function (i) {
+        return {
+          menuId: i.menuId, menuName: i.menuName,
+          qty: i.qty, unitPrice: i.unitPrice,
+          subtotal: i.unitPrice * i.qty,
+          description: (i.notes || Object.keys(i.selectedOptions || {}).length)
+            ? JSON.stringify({ notes: i.notes || '', options: i.selectedOptions || {} })
+            : '',
+        };
+      });
+      memOrders[orderIdx].totalAmount = newTotal;
+    }
+
+    var savedOrderId = _editOrderId;
+
+    // ✅ Tutup modal & re-render — tanpa loading
     closeModal('editOrderModal');
-    Loader.show();
-    gasCall('apiUpdateOrderItems', _editOrderId, JSON.stringify(payload)).then(function (res) {
-      Loader.hide();
-      if (res.success) {
-        Toast.success('Pesanan diperbarui');
-        if (typeof loadQueue === 'function') loadQueue();
-      } else {
-        Toast.error('Gagal: ' + (res.error || 'Unknown error'));
-      }
-    }).catch(function () { Loader.hide(); Toast.error('Terjadi kesalahan'); });
+    if (typeof updateQueueBadges === 'function') updateQueueBadges();
+    if (typeof renderQueueGrid === 'function') renderQueueGrid();
+
+    // ✅ Tampilkan sync-bar
+    var syncBar = document.getElementById('syncBar');
+    if (syncBar) {
+      syncBar.textContent = '⏳ Menyimpan perubahan pesanan...';
+      syncBar.classList.add('visible');
+    }
+
+    // ✅ Kirim ke GAS di background
+    gasCall('apiUpdateOrderItems', savedOrderId, JSON.stringify(payload))
+      .then(function (res) {
+        // Sembunyikan sync-bar
+        if (syncBar) syncBar.classList.remove('visible');
+
+        if (res.success) {
+          var label = customerLabel ? ' untuk ' + customerLabel : '';
+          Toast.success('Pesanan' + label + ' berhasil diperbarui');
+          if (typeof loadQueue === 'function') loadQueue();
+        } else {
+          // Rollback memory
+          if (orderIdx !== -1 && snapItems) {
+            memOrders[orderIdx].items = snapItems;
+            memOrders[orderIdx].totalAmount = snapTotal;
+          }
+          if (typeof renderQueueGrid === 'function') renderQueueGrid();
+          Toast.error('Gagal menyimpan: ' + (res.error || 'Unknown error'));
+        }
+      })
+      .catch(function () {
+        // Sembunyikan sync-bar
+        if (syncBar) syncBar.classList.remove('visible');
+
+        // Rollback memory
+        if (orderIdx !== -1 && snapItems) {
+          memOrders[orderIdx].items = snapItems;
+          memOrders[orderIdx].totalAmount = snapTotal;
+        }
+        if (typeof renderQueueGrid === 'function') renderQueueGrid();
+        Toast.error('Terjadi kesalahan, perubahan dibatalkan');
+      });
   }
 </script>
