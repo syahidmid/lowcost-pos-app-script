@@ -209,6 +209,22 @@
     transition: var(--transition);
     -webkit-tap-highlight-color: transparent;
     user-select: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .edit-item-option-pill .pill-price {
+    font-size: 10px;
+    font-weight: 600;
+    background: rgba(0, 0, 0, 0.10);
+    border-radius: 10px;
+    padding: 1px 6px;
+    white-space: nowrap;
+  }
+
+  .edit-item-option-pill.selected .pill-price {
+    background: rgba(255, 255, 255, 0.22);
   }
 
   .edit-item-option-pill.selected {
@@ -369,6 +385,17 @@
     } catch (e) { return ''; }
   }
 
+  // ── Helper: hitung unitPrice dari base + modifier opsi ───
+  function _calcUnitPrice(menuDef, selectedOptions) {
+    var base = menuDef.price;
+    var modifier = 0;
+    (menuDef.options || []).forEach(function (g) {
+      var chosen = (selectedOptions || {})[g.name];
+      if (chosen && g.prices && g.prices[chosen]) modifier += Number(g.prices[chosen]) || 0;
+    });
+    return base + modifier;
+  }
+
   // ── Render order card HTML ────────────────────────────────
 
   function renderOrderCard(o, onUpdateStatus, onEdit) {
@@ -385,7 +412,6 @@
     }).join('');
 
     var total = o.items.reduce(function (s, i) { return s + i.unitPrice * i.qty; }, 0);
-
     var canEdit = o.status === 'pending' || o.status === 'preparing';
     var updateFn = onUpdateStatus || 'updateOrderStatus';
     var editFn = onEdit || 'openEditOrder';
@@ -453,10 +479,9 @@
     var order = memOrders.find(function (o) { return o.orderId === orderId; });
 
     if (order && order.items && order.items.length) {
-      // Data sudah ada di memory — langsung buka modal tanpa loading
       _buildEditModal(order);
     } else {
-      // Fallback ke server (edge case: order tidak ada di memory)
+      // Fallback ke server kalau tidak ketemu di memory
       Loader.show();
       gasCall('apiGetOrderWithItems', orderId).then(function (o) {
         Loader.hide();
@@ -469,21 +494,29 @@
     }
   }
 
-  // ✅ Extract render logic ke fungsi terpisah
+  // ✅ Build modal dari data order (memory atau server)
   function _buildEditModal(order) {
     _editOrderId = order.orderId;
+    var menus = typeof allMenus !== 'undefined' ? allMenus : [];
 
     _editOrderItems = order.items.map(function (i) {
       // Support dua format: raw description JSON atau field terpisah
       var descObj = {};
       try { if (i.description) descObj = JSON.parse(i.description); } catch (e) { }
+
+      var selectedOptions = descObj.options || i.options || {};
+
+      // ✅ Recalculate unitPrice dari base + modifier opsi yang tersimpan
+      var menuDef = menus.find(function (m) { return m.id === i.menuId; });
+      var unitPrice = menuDef ? _calcUnitPrice(menuDef, selectedOptions) : i.unitPrice;
+
       return {
         menuId: i.menuId,
         menuName: i.menuName,
         qty: i.qty,
-        unitPrice: i.unitPrice,
+        unitPrice: unitPrice,
         notes: descObj.notes || i.notes || '',
-        selectedOptions: descObj.options || i.options || {},
+        selectedOptions: selectedOptions,
         emoji: '🍽️',
       };
     });
@@ -504,8 +537,8 @@
       updateEditTotal();
       return;
     }
+    var menus = typeof allMenus !== 'undefined' ? allMenus : [];
     container.innerHTML = _editOrderItems.map(function (item, idx) {
-      var menus = typeof allMenus !== 'undefined' ? allMenus : [];
       var menuDef = menus.find(function (m) { return m.id === item.menuId; });
       var optionGroups = (menuDef && menuDef.options) ? menuDef.options : [];
 
@@ -515,9 +548,13 @@
           optionGroups.map(function (g) {
             var pills = g.values.map(function (v) {
               var isSelected = (item.selectedOptions || {})[g.name] === v;
+              // ✅ Tampilkan price modifier kalau ada
+              var modifier = (g.prices && g.prices[v]) ? Number(g.prices[v]) : 0;
+              var priceLabel = modifier > 0 ? '<span class="pill-price">+' + formatIDR(modifier) + '</span>' : '';
               return '<div class="edit-item-option-pill ' + (isSelected ? 'selected' : '') + '" ' +
                 'onclick="editItemOption(' + idx + ',\'' + g.name.replace(/'/g, "\\'") + '\',\'' + v.replace(/'/g, "\\'") + '\')">' +
-                v + '</div>';
+                '<span>' + v + '</span>' + priceLabel +
+                '</div>';
             }).join('');
             return '<div class="edit-item-option-group">' +
               '<div class="edit-item-option-label">' + g.name + '</div>' +
@@ -576,11 +613,18 @@
   function editItemOption(idx, groupName, value) {
     if (!_editOrderItems[idx].selectedOptions) _editOrderItems[idx].selectedOptions = {};
     _editOrderItems[idx].selectedOptions[groupName] = value;
+
     var menus = typeof allMenus !== 'undefined' ? allMenus : [];
     var menuDef = menus.find(function (m) { return m.id === _editOrderItems[idx].menuId; });
     if (!menuDef) return;
+
+    // ✅ Recalculate unitPrice setelah opsi berubah
+    _editOrderItems[idx].unitPrice = _calcUnitPrice(menuDef, _editOrderItems[idx].selectedOptions);
+
     var group = (menuDef.options || []).find(function (g) { return g.name === groupName; });
     if (!group) return;
+
+    // Re-render pills untuk group ini saja (hindari focus loss di input notes)
     var allItems = document.querySelectorAll('.edit-order-item');
     if (!allItems[idx]) return;
     var pillContainers = allItems[idx].querySelectorAll('.edit-item-option-pills');
@@ -588,11 +632,19 @@
     if (pillContainers[groupIndex]) {
       pillContainers[groupIndex].innerHTML = group.values.map(function (v) {
         var isSelected = _editOrderItems[idx].selectedOptions[groupName] === v;
+        var modifier = (group.prices && group.prices[v]) ? Number(group.prices[v]) : 0;
+        var priceLabel = modifier > 0 ? '<span class="pill-price">+' + formatIDR(modifier) + '</span>' : '';
         return '<div class="edit-item-option-pill ' + (isSelected ? 'selected' : '') + '" ' +
           'onclick="editItemOption(' + idx + ',\'' + groupName.replace(/'/g, "\\'") + '\',\'' + v.replace(/'/g, "\\'") + '\')">' +
-          v + '</div>';
+          '<span>' + v + '</span>' + priceLabel +
+          '</div>';
       }).join('');
     }
+
+    // Update harga item
+    var priceEls = document.querySelectorAll('.edit-order-item-price');
+    if (priceEls[idx]) priceEls[idx].textContent = formatIDR(_editOrderItems[idx].unitPrice * _editOrderItems[idx].qty);
+    updateEditTotal();
   }
 
   function editItemDesc(idx, value) { _editOrderItems[idx].notes = value; }
@@ -610,7 +662,8 @@
       var CAT_EMOJI = { Coffee: '☕', 'No Coffee': '🥤', Snack: '🍩' };
       _editOrderItems.push({
         menuId: m.id, menuName: m.name, qty: 1,
-        unitPrice: m.price, notes: '', selectedOptions: {},
+        unitPrice: m.price, // base price — modifier dihitung saat opsi dipilih
+        notes: '', selectedOptions: {},
         emoji: CAT_EMOJI[m.category] || '🍽️',
       });
     }
