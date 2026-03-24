@@ -744,11 +744,30 @@
       user-select: none;
     }
 
+    .option-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .option-pill .pill-price {
+      font-size: 10px;
+      font-weight: 600;
+      background: rgba(0, 0, 0, 0.10);
+      border-radius: 10px;
+      padding: 1px 6px;
+      white-space: nowrap;
+    }
+
     .option-pill.selected {
       background: var(--accent);
       color: #fff;
       border-color: var(--accent);
       box-shadow: 0 2px 8px rgba(59, 91, 252, 0.25);
+    }
+
+    .option-pill.selected .pill-price {
+      background: rgba(255, 255, 255, 0.22);
     }
 
     .option-pill:active {
@@ -1412,12 +1431,31 @@
       openModal('itemModal');
     }
 
+    // ✅ Hitung unitPrice = base price + total modifier dari selectedOptions
+    function calcUnitPrice(menu, opts) {
+      var base = menu.price;
+      var modifier = 0;
+      (menu.options || []).forEach(function (g) {
+        var chosen = opts[g.name];
+        if (chosen && g.prices && g.prices[chosen]) modifier += Number(g.prices[chosen]) || 0;
+      });
+      return base + modifier;
+    }
+
+    function updateModalPrice() {
+      if (!selectedMenu) return;
+      document.getElementById('modalPrice').textContent = formatIDR(calcUnitPrice(selectedMenu, selectedOptions));
+    }
+
     function renderModalOptions(options) {
       var container = document.getElementById('modalOptions');
       if (!options || !options.length) { container.innerHTML = ''; return; }
       container.innerHTML = options.map(function (g) {
         var pills = g.values.map(function (v) {
-          return '<div class="option-pill ' + (selectedOptions[g.name] === v ? 'selected' : '') + '" onclick="selectOption(\'' + g.name + '\',\'' + v + '\')">' + v + '</div>';
+          var modifier = (g.prices && g.prices[v]) ? Number(g.prices[v]) : 0;
+          var priceLabel = modifier > 0 ? '<span class="pill-price">+' + formatIDR(modifier) + '</span>' : '';
+          return '<div class="option-pill ' + (selectedOptions[g.name] === v ? 'selected' : '') + '" onclick="selectOption(\'' + g.name + '\',\'' + v + '\')">' +
+            '<span>' + v + '</span>' + priceLabel + '</div>';
         }).join('');
         return '<div class="option-section"><div class="option-section-label">' + g.name + '</div>' +
           '<div class="option-pills" id="pills_' + g.name.replace(/\s/g, '_') + '">' + pills + '</div></div>';
@@ -1431,8 +1469,12 @@
       var group = (selectedMenu.options || []).find(function (g) { return g.name === groupName; });
       if (!group) return;
       container.innerHTML = group.values.map(function (v) {
-        return '<div class="option-pill ' + (selectedOptions[groupName] === v ? 'selected' : '') + '" onclick="selectOption(\'' + groupName + '\',\'' + v + '\')">' + v + '</div>';
+        var modifier = (group.prices && group.prices[v]) ? Number(group.prices[v]) : 0;
+        var priceLabel = modifier > 0 ? '<span class="pill-price">+' + formatIDR(modifier) + '</span>' : '';
+        return '<div class="option-pill ' + (selectedOptions[groupName] === v ? 'selected' : '') + '" onclick="selectOption(\'' + groupName + '\',\'' + v + '\')">' +
+          '<span>' + v + '</span>' + priceLabel + '</div>';
       }).join('');
+      updateModalPrice(); // ✅ update harga di modal saat opsi berubah
     }
 
     function modalQtyChange(delta) {
@@ -1448,13 +1490,16 @@
       Object.keys(selectedOptions).forEach(function (k) { if (selectedOptions[k]) optParts.push(selectedOptions[k]); });
       if (manualNote) optParts.push(manualNote);
       var displayNotes = optParts.join(' · ');
+      // ✅ Hitung unitPrice dengan modifier opsi
+      var unitPrice = calcUnitPrice(selectedMenu, selectedOptions);
       var existing = cart.find(function (c) { return c.menuId === selectedMenu.id; });
       if (existing) {
         existing.qty = qty; existing.notes = displayNotes;
         existing.manualNote = manualNote;
+        existing.unitPrice = unitPrice;
         existing.selectedOptions = JSON.parse(JSON.stringify(selectedOptions));
       } else {
-        cart.push({ menuId: selectedMenu.id, menuName: selectedMenu.name, qty: qty, unitPrice: selectedMenu.price, notes: displayNotes, manualNote: manualNote, selectedOptions: JSON.parse(JSON.stringify(selectedOptions)), emoji: menuEmoji(selectedMenu.category) });
+        cart.push({ menuId: selectedMenu.id, menuName: selectedMenu.name, qty: qty, unitPrice: unitPrice, notes: displayNotes, manualNote: manualNote, selectedOptions: JSON.parse(JSON.stringify(selectedOptions)), emoji: menuEmoji(selectedMenu.category) });
       }
       closeModal('itemModal');
       renderCart(); renderMenuGrid(currentCat);
