@@ -1,0 +1,765 @@
+<!-- ============================================================
+     components/OrderCard.html
+     Shared order card component — include di Home dan Queue
+     Provides: CSS, renderOrderCard(), updateOrderStatus(),
+               confirmCancel(), getTimeAgo(), openEditOrder()
+============================================================ -->
+
+<style>
+  /* ── Order Card ── */
+  .qcard {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition);
+  }
+
+  .qcard.status-pending {
+    border-left: 3px solid var(--blue);
+  }
+
+  .qcard.status-preparing {
+    border-left: 3px solid var(--amber);
+  }
+
+  .qcard-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .qcard-id {
+    font-size: 10.5px;
+    color: var(--text-3);
+    font-weight: 500;
+    margin-bottom: 2px;
+  }
+
+  .qcard-customer {
+    font-family: var(--font-head);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .qcard-time {
+    font-size: 11px;
+    color: var(--text-3);
+    white-space: nowrap;
+    margin-top: 4px;
+  }
+
+  .qcard-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  .qcard-item-chip {
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xs);
+    padding: 4px 8px;
+    font-size: 12px;
+    color: var(--text-2);
+    font-weight: 500;
+  }
+
+  .qcard-item-chip strong {
+    color: var(--text);
+    font-weight: 700;
+  }
+
+  .qcard-item-desc {
+    font-size: 11px;
+    color: var(--accent);
+    margin-top: 2px;
+    font-weight: 500;
+  }
+
+  .qcard-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .qcard-total {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .qcard-actions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  /* ── Edit Order Modal ── */
+  .edit-order-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .edit-order-item:last-child {
+    border-bottom: none;
+  }
+
+  .edit-order-item-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .edit-order-item-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .edit-order-item-opts {
+    font-size: 12px;
+    color: var(--text-3);
+    margin-top: 2px;
+  }
+
+  .edit-order-item-price {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    white-space: nowrap;
+  }
+
+  .edit-qty-ctrl {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+  }
+
+  .edit-qty-btn {
+    width: 26px;
+    height: 26px;
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xs);
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text);
+    transition: var(--transition);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .edit-qty-btn:active {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .edit-qty-val {
+    font-size: 13px;
+    font-weight: 700;
+    min-width: 20px;
+    text-align: center;
+  }
+
+  .edit-item-options {
+    margin-top: 10px;
+  }
+
+  .edit-item-option-group {
+    margin-bottom: 8px;
+  }
+
+  .edit-item-option-label {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+
+  .edit-item-option-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .edit-item-option-pill {
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--bg-3);
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--text-2);
+    cursor: pointer;
+    transition: var(--transition);
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .edit-item-option-pill .pill-price {
+    font-size: 10px;
+    font-weight: 600;
+    background: rgba(0, 0, 0, 0.10);
+    border-radius: 10px;
+    padding: 1px 6px;
+    white-space: nowrap;
+  }
+
+  .edit-item-option-pill.selected .pill-price {
+    background: rgba(255, 255, 255, 0.22);
+  }
+
+  .edit-item-option-pill.selected {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+    box-shadow: 0 2px 8px rgba(59, 91, 252, 0.22);
+  }
+
+  .edit-item-option-pill:active {
+    transform: scale(0.96);
+  }
+
+  .edit-item-notes-input {
+    margin-top: 8px;
+    width: 100%;
+    font-size: 12.5px;
+    color: var(--text-2);
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xs);
+    padding: 6px 10px;
+    outline: none;
+    transition: border-color var(--transition);
+    box-sizing: border-box;
+  }
+
+  .edit-item-notes-input::placeholder {
+    color: var(--text-3);
+  }
+
+  .edit-item-notes-input:focus {
+    border-color: var(--accent);
+  }
+
+  .edit-order-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    margin-top: 4px;
+    border-top: 2px solid var(--border);
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .edit-order-total span:last-child {
+    color: var(--accent);
+    font-family: var(--font-head);
+  }
+
+  .edit-add-section {
+    margin-top: 16px;
+  }
+
+  .edit-add-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+  }
+
+  .edit-menu-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    max-height: 220px;
+    overflow-y: auto;
+  }
+
+  .edit-menu-item {
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px;
+    cursor: pointer;
+    transition: var(--transition);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .edit-menu-item:active {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+  }
+
+  .edit-menu-item-name {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+
+  .edit-menu-item-price {
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 600;
+  }
+</style>
+
+<!-- ── Edit Order Modal ── -->
+<div class="modal-overlay" id="editOrderModal" onclick="closeModalOnOverlay(event,'editOrderModal')">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Edit Pesanan</div>
+        <div id="editOrderCustomer" style="font-size:13px;color:var(--text-3);margin-top:2px"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal('editOrderModal')">✕</button>
+    </div>
+
+    <div
+      style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">
+      Item Saat Ini
+    </div>
+    <div id="editOrderItems"></div>
+    <div class="edit-order-total">
+      <span>Total</span>
+      <span id="editOrderTotal">Rp 0</span>
+    </div>
+
+    <div class="edit-add-section">
+      <div class="edit-add-title">Tambah Item</div>
+      <div class="edit-menu-grid" id="editMenuGrid"></div>
+    </div>
+
+    <div class="flex gap-8" style="margin-top:20px">
+      <button class="btn btn-ghost flex-1" onclick="closeModal('editOrderModal')">Batal</button>
+      <button class="btn btn-primary flex-1" onclick="submitEditOrder()">Simpan Perubahan</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── State for edit order ──────────────────────────────────
+  var _editOrderId = null;
+  var _editOrderItems = [];
+
+  // ── Shared helpers ────────────────────────────────────────
+
+  function getTimeAgo(isoString) {
+    if (!isoString) return '';
+    var diff = Math.floor((Date.now() - new Date(isoString)) / 1000);
+    if (diff < 60) return diff + 'd lalu';
+    if (diff < 3600) return Math.floor(diff / 60) + 'm lalu';
+    return Math.floor(diff / 3600) + 'j lalu';
+  }
+
+  function parseItemDesc(description) {
+    if (!description) return '';
+    try {
+      var d = JSON.parse(description);
+      var parts = [];
+      if (d.options) Object.keys(d.options).forEach(function (k) { if (d.options[k]) parts.push(d.options[k]); });
+      if (d.notes) parts.push(d.notes);
+      return parts.join(' · ');
+    } catch (e) { return ''; }
+  }
+
+  // ── Helper: hitung unitPrice dari base + modifier opsi ───
+  function _calcUnitPrice(menuDef, selectedOptions) {
+    var base = menuDef.price;
+    var modifier = 0;
+    (menuDef.options || []).forEach(function (g) {
+      var chosen = (selectedOptions || {})[g.name];
+      if (chosen && g.prices && g.prices[chosen]) modifier += Number(g.prices[chosen]) || 0;
+    });
+    return base + modifier;
+  }
+
+  // ── Render order card HTML ────────────────────────────────
+
+  function renderOrderCard(o, onUpdateStatus, onEdit) {
+    var customer = o.customerName ||
+      '<span style="color:var(--text-3);font-weight:400;font-size:12px">Tanpa nama</span>';
+    var timeAgo = getTimeAgo(o.createdAt);
+
+    var chips = o.items.map(function (i) {
+      var descStr = parseItemDesc(i.description);
+      return '<div class="qcard-item-chip">' +
+        '<strong>' + i.qty + '×</strong> ' + i.menuName +
+        (descStr ? '<div class="qcard-item-desc">' + descStr + '</div>' : '') +
+        '</div>';
+    }).join('');
+
+    var total = o.items.reduce(function (s, i) { return s + i.unitPrice * i.qty; }, 0);
+    var canEdit = o.status === 'pending' || o.status === 'preparing';
+    var updateFn = onUpdateStatus || 'updateOrderStatus';
+    var editFn = onEdit || 'openEditOrder';
+
+    var actions =
+      (o.status === 'pending'
+        ? '<button class="btn btn-sm" style="background:var(--amber-bg);color:var(--amber);border:1px solid rgba(217,119,6,0.2)" ' +
+        'onclick="' + updateFn + '(\'' + o.orderId + '\',\'preparing\')">Proses</button>'
+        : '') +
+      (o.status === 'preparing'
+        ? '<button class="btn btn-success btn-sm" onclick="' + updateFn + '(\'' + o.orderId + '\',\'done\')">Selesai</button>'
+        : '') +
+      (canEdit
+        ? '<button class="btn btn-ghost btn-sm" onclick="' + editFn + '(\'' + o.orderId + '\')">✏️ Edit</button>'
+        : '') +
+      '<button class="btn btn-danger btn-sm" onclick="confirmCancel(\'' + o.orderId + '\')">Batal</button>';
+
+    return '<div class="qcard status-' + o.status + '" id="qcard-' + o.orderId + '">' +
+      '<div class="qcard-top">' +
+      '<div>' +
+      '<div class="qcard-id">#' + (o.orderId.split('-')[1] || o.orderId) + '</div>' +
+      '<div class="qcard-customer">' + customer + '</div>' +
+      '</div>' +
+      '<div style="text-align:right">' +
+      statusBadge(o.status) +
+      '<div class="qcard-time">' + timeAgo + '</div>' +
+      '</div>' +
+      '</div>' +
+      '<div class="qcard-items">' + chips + '</div>' +
+      '<div class="qcard-footer">' +
+      '<div class="qcard-total">' + formatIDR(total) + '</div>' +
+      '<div class="qcard-actions">' + actions + '</div>' +
+      '</div>' +
+      '</div>';
+  }
+
+  // ── Status update ─────────────────────────────────────────
+
+  function updateOrderStatus(orderId, status, onDone) {
+    var card = document.getElementById('qcard-' + orderId);
+    if (card) card.style.opacity = '0.5';
+    gasCall('apiUpdateOrderStatus', orderId, status).then(function () {
+      var labels = { preparing: 'Diproses', done: 'Selesai!', cancelled: 'Dibatalkan' };
+      Toast.success('Pesanan ' + (labels[status] || status));
+      if (typeof onDone === 'function') onDone();
+    }).catch(function () {
+      if (card) card.style.opacity = '1';
+      Toast.error('Gagal update status');
+    });
+  }
+
+  function confirmCancel(orderId) {
+    if (confirm('Batalkan pesanan ini?')) {
+      updateOrderStatus(orderId, 'cancelled', function () {
+        if (typeof loadQueue === 'function') loadQueue();
+      });
+    }
+  }
+
+  // ── Edit Order ────────────────────────────────────────────
+
+  function openEditOrder(orderId) {
+    // ✅ Cari dari allOrders di memory dulu — tidak perlu gasCall
+    var memOrders = (typeof allOrders !== 'undefined' ? allOrders : []);
+    var order = memOrders.find(function (o) { return o.orderId === orderId; });
+
+    if (order && order.items && order.items.length) {
+      _buildEditModal(order);
+    } else {
+      // Fallback ke server kalau tidak ketemu di memory
+      Loader.show();
+      gasCall('apiGetOrderWithItems', orderId).then(function (o) {
+        Loader.hide();
+        if (!o) return Toast.error('Order tidak ditemukan');
+        _buildEditModal(o);
+      }).catch(function () {
+        Loader.hide();
+        Toast.error('Gagal memuat pesanan');
+      });
+    }
+  }
+
+  // ✅ Build modal dari data order (memory atau server)
+  function _buildEditModal(order) {
+    _editOrderId = order.orderId;
+    var menus = typeof allMenus !== 'undefined' ? allMenus : [];
+
+    _editOrderItems = order.items.map(function (i) {
+      // Parse description JSON kalau ada
+      var descObj = {};
+      try { if (i.description) descObj = JSON.parse(i.description); } catch (e) { }
+
+      // ✅ Priority: descObj.options (dari server) → i.options (dari memory allOrders) → i.selectedOptions (dari optimistic local) → {}
+      var selectedOptions = descObj.options || i.options || i.selectedOptions || {};
+      var notes = descObj.notes || i.notes || '';
+
+      // ✅ Recalculate unitPrice dari base + modifier opsi yang tersimpan
+      var menuDef = menus.find(function (m) { return m.id === i.menuId; });
+      var unitPrice = menuDef ? _calcUnitPrice(menuDef, selectedOptions) : i.unitPrice;
+
+      return {
+        menuId: i.menuId,
+        menuName: i.menuName,
+        qty: i.qty,
+        unitPrice: unitPrice,
+        notes: notes,
+        selectedOptions: selectedOptions,
+        emoji: '🍽️',
+      };
+    });
+
+    var customerLabel = order.customerName || 'Tanpa nama';
+    document.getElementById('editOrderCustomer').textContent =
+      '👤 ' + customerLabel + ' · #' + (order.orderId.split('-')[1] || order.orderId);
+
+    renderEditItems();
+    renderEditMenuGrid();
+    openModal('editOrderModal');
+  }
+
+  function renderEditItems() {
+    var container = document.getElementById('editOrderItems');
+    if (!_editOrderItems.length) {
+      container.innerHTML = '<div class="empty-state" style="padding:20px 0"><p>Tidak ada item</p></div>';
+      updateEditTotal();
+      return;
+    }
+    var menus = typeof allMenus !== 'undefined' ? allMenus : [];
+    container.innerHTML = _editOrderItems.map(function (item, idx) {
+      var menuDef = menus.find(function (m) { return m.id === item.menuId; });
+      var optionGroups = (menuDef && menuDef.options) ? menuDef.options : [];
+
+      var optionsHtml = '';
+      if (optionGroups.length) {
+        optionsHtml = '<div class="edit-item-options">' +
+          optionGroups.map(function (g) {
+            var pills = g.values.map(function (v) {
+              var isSelected = (item.selectedOptions || {})[g.name] === v;
+              // ✅ Tampilkan price modifier kalau ada
+              var modifier = (g.prices && g.prices[v]) ? Number(g.prices[v]) : 0;
+              var priceLabel = modifier > 0 ? '<span class="pill-price">+' + formatIDR(modifier) + '</span>' : '';
+              return '<div class="edit-item-option-pill ' + (isSelected ? 'selected' : '') + '" ' +
+                'onclick="editItemOption(' + idx + ',\'' + g.name.replace(/'/g, "\\'") + '\',\'' + v.replace(/'/g, "\\'") + '\')">' +
+                '<span>' + v + '</span>' + priceLabel +
+                '</div>';
+            }).join('');
+            return '<div class="edit-item-option-group">' +
+              '<div class="edit-item-option-label">' + g.name + '</div>' +
+              '<div class="edit-item-option-pills">' + pills + '</div>' +
+              '</div>';
+          }).join('') +
+          '</div>';
+      }
+
+      return '<div class="edit-order-item">' +
+        '<div class="edit-order-item-info">' +
+        '<div class="edit-order-item-name">' + item.menuName + '</div>' +
+        '<div class="edit-qty-ctrl">' +
+        '<div class="edit-qty-btn" onclick="editItemQty(' + idx + ',-1)">−</div>' +
+        '<div class="edit-qty-val" id="edit-qty-' + idx + '">' + item.qty + '</div>' +
+        '<div class="edit-qty-btn" onclick="editItemQty(' + idx + ',1)">+</div>' +
+        '<button class="btn btn-danger btn-sm" style="margin-left:4px;padding:2px 8px" onclick="removeEditItem(' + idx + ')">✕</button>' +
+        '</div>' +
+        optionsHtml +
+        '<input type="text" class="edit-item-notes-input" ' +
+        'value="' + (item.notes || '').replace(/"/g, '&quot;') + '" ' +
+        'placeholder="Tambahan, permintaan khusus..." ' +
+        'oninput="editItemDesc(' + idx + ', this.value)">' +
+        '</div>' +
+        '<div class="edit-order-item-price">' + formatIDR(item.unitPrice * item.qty) + '</div>' +
+        '</div>';
+    }).join('');
+    updateEditTotal();
+  }
+
+  function renderEditMenuGrid() {
+    var grid = document.getElementById('editMenuGrid');
+    var menus = (typeof allMenus !== 'undefined' ? allMenus : []).filter(function (m) { return m.isAvailable; });
+    if (!menus.length) {
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--text-3);font-size:13px;padding:16px">Menu tidak tersedia</div>';
+      return;
+    }
+    var CAT_EMOJI = { Coffee: '☕', 'No Coffee': '🥤', Snack: '🍩' };
+    grid.innerHTML = menus.map(function (m) {
+      return '<div class="edit-menu-item" onclick="addEditItem(\'' + m.id + '\')">' +
+        '<div class="edit-menu-item-name">' + (CAT_EMOJI[m.category] || '🍽️') + ' ' + m.name + '</div>' +
+        '<div class="edit-menu-item-price">' + formatIDR(m.price) + '</div>' +
+        '</div>';
+    }).join('');
+  }
+
+  function editItemQty(idx, delta) {
+    var newQty = Math.max(1, _editOrderItems[idx].qty + delta);
+    _editOrderItems[idx].qty = newQty;
+    document.getElementById('edit-qty-' + idx).textContent = newQty;
+    var items = document.querySelectorAll('.edit-order-item-price');
+    if (items[idx]) items[idx].textContent = formatIDR(_editOrderItems[idx].unitPrice * newQty);
+    updateEditTotal();
+  }
+
+  function editItemOption(idx, groupName, value) {
+    if (!_editOrderItems[idx].selectedOptions) _editOrderItems[idx].selectedOptions = {};
+    _editOrderItems[idx].selectedOptions[groupName] = value;
+
+    var menus = typeof allMenus !== 'undefined' ? allMenus : [];
+    var menuDef = menus.find(function (m) { return m.id === _editOrderItems[idx].menuId; });
+    if (!menuDef) return;
+
+    // ✅ Recalculate unitPrice setelah opsi berubah
+    _editOrderItems[idx].unitPrice = _calcUnitPrice(menuDef, _editOrderItems[idx].selectedOptions);
+
+    var group = (menuDef.options || []).find(function (g) { return g.name === groupName; });
+    if (!group) return;
+
+    // Re-render pills untuk group ini saja (hindari focus loss di input notes)
+    var allItems = document.querySelectorAll('.edit-order-item');
+    if (!allItems[idx]) return;
+    var pillContainers = allItems[idx].querySelectorAll('.edit-item-option-pills');
+    var groupIndex = (menuDef.options || []).findIndex(function (g) { return g.name === groupName; });
+    if (pillContainers[groupIndex]) {
+      pillContainers[groupIndex].innerHTML = group.values.map(function (v) {
+        var isSelected = _editOrderItems[idx].selectedOptions[groupName] === v;
+        var modifier = (group.prices && group.prices[v]) ? Number(group.prices[v]) : 0;
+        var priceLabel = modifier > 0 ? '<span class="pill-price">+' + formatIDR(modifier) + '</span>' : '';
+        return '<div class="edit-item-option-pill ' + (isSelected ? 'selected' : '') + '" ' +
+          'onclick="editItemOption(' + idx + ',\'' + groupName.replace(/'/g, "\\'") + '\',\'' + v.replace(/'/g, "\\'") + '\')">' +
+          '<span>' + v + '</span>' + priceLabel +
+          '</div>';
+      }).join('');
+    }
+
+    // Update harga item
+    var priceEls = document.querySelectorAll('.edit-order-item-price');
+    if (priceEls[idx]) priceEls[idx].textContent = formatIDR(_editOrderItems[idx].unitPrice * _editOrderItems[idx].qty);
+    updateEditTotal();
+  }
+
+  function editItemDesc(idx, value) { _editOrderItems[idx].notes = value; }
+
+  function removeEditItem(idx) { _editOrderItems.splice(idx, 1); renderEditItems(); }
+
+  function addEditItem(menuId) {
+    var menus = typeof allMenus !== 'undefined' ? allMenus : [];
+    var m = menus.find(function (x) { return x.id === menuId; });
+    if (!m) return;
+    var existing = _editOrderItems.find(function (i) { return i.menuId === menuId; });
+    if (existing) {
+      existing.qty++;
+    } else {
+      var CAT_EMOJI = { Coffee: '☕', 'No Coffee': '🥤', Snack: '🍩' };
+      _editOrderItems.push({
+        menuId: m.id, menuName: m.name, qty: 1,
+        unitPrice: m.price, // base price — modifier dihitung saat opsi dipilih
+        notes: '', selectedOptions: {},
+        emoji: CAT_EMOJI[m.category] || '🍽️',
+      });
+    }
+    renderEditItems();
+    Toast.info(m.name + ' ditambahkan');
+  }
+
+  function updateEditTotal() {
+    var total = _editOrderItems.reduce(function (s, i) { return s + i.unitPrice * i.qty; }, 0);
+    document.getElementById('editOrderTotal').textContent = formatIDR(total);
+  }
+
+  function submitEditOrder() {
+    if (!_editOrderId) return;
+    if (!_editOrderItems.length) return Toast.error('Minimal 1 item');
+
+    var payload = {
+      items: _editOrderItems.map(function (i) {
+        return {
+          menuId: i.menuId, menuName: i.menuName,
+          qty: i.qty, unitPrice: i.unitPrice,
+          notes: i.notes || '', selectedOptions: i.selectedOptions || {},
+        };
+      }),
+    };
+
+    // Snapshot data lama untuk rollback kalau sync gagal
+    var memOrders = (typeof allOrders !== 'undefined' ? allOrders : []);
+    var orderIdx = memOrders.findIndex(function (o) { return o.orderId === _editOrderId; });
+    var snapItems = orderIdx !== -1 ? JSON.parse(JSON.stringify(memOrders[orderIdx].items)) : null;
+    var snapTotal = orderIdx !== -1 ? memOrders[orderIdx].totalAmount : null;
+    var customerLabel = orderIdx !== -1 ? (memOrders[orderIdx].customerName || '') : '';
+
+    // ✅ Update allOrders di memory — optimistic
+    if (orderIdx !== -1) {
+      var newTotal = _editOrderItems.reduce(function (s, i) { return s + i.unitPrice * i.qty; }, 0);
+      memOrders[orderIdx].items = _editOrderItems.map(function (i) {
+        return {
+          menuId: i.menuId, menuName: i.menuName,
+          qty: i.qty, unitPrice: i.unitPrice,
+          subtotal: i.unitPrice * i.qty,
+          description: (i.notes || Object.keys(i.selectedOptions || {}).length)
+            ? JSON.stringify({ notes: i.notes || '', options: i.selectedOptions || {} })
+            : '',
+        };
+      });
+      memOrders[orderIdx].totalAmount = newTotal;
+    }
+
+    var savedOrderId = _editOrderId;
+
+    // ✅ Tutup modal & re-render — tanpa loading
+    closeModal('editOrderModal');
+    if (typeof updateQueueBadges === 'function') updateQueueBadges();
+    if (typeof renderQueueGrid === 'function') renderQueueGrid();
+
+    // ✅ Tampilkan sync-bar
+    var syncBar = document.getElementById('syncBar');
+    if (syncBar) {
+      syncBar.textContent = '⏳ Menyimpan perubahan pesanan...';
+      syncBar.classList.add('visible');
+    }
+
+    // ✅ Kirim ke GAS di background
+    gasCall('apiUpdateOrderItems', savedOrderId, JSON.stringify(payload))
+      .then(function (res) {
+        // Sembunyikan sync-bar
+        if (syncBar) syncBar.classList.remove('visible');
+
+        if (res.success) {
+          var label = customerLabel ? ' untuk ' + customerLabel : '';
+          Toast.success('Pesanan' + label + ' berhasil diperbarui');
+          if (typeof loadQueue === 'function') loadQueue();
+        } else {
+          // Rollback memory
+          if (orderIdx !== -1 && snapItems) {
+            memOrders[orderIdx].items = snapItems;
+            memOrders[orderIdx].totalAmount = snapTotal;
+          }
+          if (typeof renderQueueGrid === 'function') renderQueueGrid();
+          Toast.error('Gagal menyimpan: ' + (res.error || 'Unknown error'));
+        }
+      })
+      .catch(function () {
+        // Sembunyikan sync-bar
+        if (syncBar) syncBar.classList.remove('visible');
+
+        // Rollback memory
+        if (orderIdx !== -1 && snapItems) {
+          memOrders[orderIdx].items = snapItems;
+          memOrders[orderIdx].totalAmount = snapTotal;
+        }
+        if (typeof renderQueueGrid === 'function') renderQueueGrid();
+        Toast.error('Terjadi kesalahan, perubahan dibatalkan');
+      });
+  }
+</script>

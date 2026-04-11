@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <base target="_top">
+  <?!= include('components/Styles') ?>
+  <style>
+    .menu-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 16px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* ── Toolbar ── */
+    .toolbar {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .toolbar-top {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .toolbar-top .btn {
+      flex-shrink: 0;
+    }
+
+    .toolbar-top input {
+      flex: 1;
+    }
+
+    .filter-tabs {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      padding-bottom: 2px;
+    }
+
+    .filter-tabs::-webkit-scrollbar {
+      display: none;
+    }
+
+    .filter-tab {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-2);
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: var(--transition);
+      -webkit-tap-highlight-color: transparent;
+      flex-shrink: 0;
+    }
+
+    .filter-tab.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    .menu-count {
+      font-size: 12px;
+      color: var(--text-3);
+      margin-bottom: 12px;
+    }
+
+    /* ── Card list (mobile) ── */
+    .menu-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .menu-card-item {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .menu-card-icon {
+      width: 44px;
+      height: 44px;
+      background: var(--bg-3);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+
+    .menu-card-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .menu-card-name {
+      font-family: var(--font-head);
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+
+    .menu-card-meta {
+      font-size: 12px;
+      color: var(--text-3);
+      margin-bottom: 4px;
+    }
+
+    .menu-card-price {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .menu-card-desc {
+      font-size: 11.5px;
+      color: var(--text-3);
+      margin-top: 2px;
+      line-height: 1.4;
+    }
+
+    .menu-card-opts {
+      margin-top: 6px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .opt-chip {
+      font-size: 10.5px;
+      padding: 2px 8px;
+      background: var(--accent-dim);
+      color: var(--accent);
+      border-radius: 10px;
+      font-weight: 600;
+    }
+
+    .menu-card-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    /* ── Desktop table ── */
+    .menu-table-wrap {
+      display: none;
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .menu-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .menu-table th {
+      padding: 11px 16px;
+      text-align: left;
+      background: var(--bg-3);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: var(--text-3);
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .menu-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-2);
+      vertical-align: middle;
+    }
+
+    .menu-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .menu-table tr:hover td {
+      background: var(--bg-3);
+    }
+
+    .menu-item-name {
+      font-weight: 600;
+      color: var(--text);
+      font-size: 13px;
+    }
+
+    .menu-item-desc {
+      font-size: 11px;
+      color: var(--text-3);
+      margin-top: 2px;
+    }
+
+    .actions-cell {
+      display: flex;
+      gap: 6px;
+    }
+
+    /* ── Options Builder ── */
+    .options-builder {
+      margin-bottom: 4px;
+    }
+
+    .options-builder-title {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    .option-group {
+      background: var(--bg-3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      margin-bottom: 8px;
+      position: relative;
+    }
+
+    .option-group-header {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .option-group-name {
+      flex: 1;
+    }
+
+    .option-group-default {
+      width: 110px;
+      flex-shrink: 0;
+    }
+
+    /* CHANGED: value chips now stack vertically to fit price input */
+    .option-values-row {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .option-value-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xs);
+      padding: 6px 10px;
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .option-value-label {
+      flex: 1;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .option-value-price-wrap {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .option-value-price-prefix {
+      font-size: 11px;
+      color: var(--text-3);
+      white-space: nowrap;
+    }
+
+    .option-value-price-input {
+      width: 80px;
+      font-size: 12px;
+      color: var(--text);
+      background: var(--bg-3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xs);
+      padding: 4px 8px;
+      outline: none;
+      text-align: right;
+      transition: border-color var(--transition);
+    }
+
+    .option-value-price-input:focus {
+      border-color: var(--accent);
+    }
+
+    .option-value-remove {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-3);
+      font-size: 13px;
+      padding: 0 0 0 4px;
+      line-height: 1;
+      flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .option-value-remove:hover {
+      color: var(--red);
+    }
+
+    .add-value-row {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .add-value-row input {
+      flex: 1;
+    }
+
+    .remove-group-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-3);
+      font-size: 14px;
+      padding: 2px;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .remove-group-btn:hover {
+      color: var(--red);
+    }
+
+    .add-group-btn {
+      width: 100%;
+      padding: 9px;
+      border: 1px dashed var(--border-2);
+      border-radius: var(--radius-sm);
+      background: transparent;
+      color: var(--text-2);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .add-group-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    @media (min-width: 768px) {
+      .menu-body {
+        padding: 24px 28px;
+      }
+
+      .toolbar {
+        flex-direction: row;
+        align-items: center;
+      }
+
+      .toolbar-top {
+        flex: 1;
+      }
+
+      .toolbar-top input {
+        max-width: 220px;
+      }
+
+      .menu-cards {
+        display: none;
+      }
+
+      .menu-table-wrap {
+        display: block;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app-shell">
+    <?!= include('components/Sidebar') ?>
+
+    <div class="main-content">
+      <div class="page-header">
+        <div class="page-title">Menu</div>
+        <div class="page-subtitle">Kelola item menu, harga, dan ketersediaan</div>
+      </div>
+
+      <div class="menu-body">
+        <div class="toolbar">
+          <div class="toolbar-top">
+            <button class="btn btn-primary btn-sm" onclick="openAddModal()">+ Tambah</button>
+            <input type="text" class="form-control" id="searchInput" placeholder="Cari menu..."
+              oninput="filterSearch()">
+          </div>
+          <div class="filter-tabs">
+            <div class="filter-tab active" onclick="filterByCategory('all',this)">Semua</div>
+            <div class="filter-tab" onclick="filterByCategory('Coffee',this)">☕ Coffee</div>
+            <div class="filter-tab" onclick="filterByCategory('No Coffee',this)">🥤 No Coffee</div>
+            <div class="filter-tab" onclick="filterByCategory('Snack',this)">🍩 Snack</div>
+          </div>
+        </div>
+
+        <div class="menu-count" id="menuCount"></div>
+
+        <!-- Mobile cards -->
+        <div class="menu-cards" id="menuCards">
+          <div class="empty-state">
+            <div class="spinner"></div>
+            <p style="margin-top:12px">Memuat menu...</p>
+          </div>
+        </div>
+
+        <!-- Desktop table -->
+        <div class="menu-table-wrap">
+          <table class="menu-table">
+            <thead>
+              <tr>
+                <th>Menu</th>
+                <th>Kategori</th>
+                <th>Harga</th>
+                <th>Opsi</th>
+                <th>Status</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="menuTableBody">
+              <tr>
+                <td colspan="6">
+                  <div class="empty-state">
+                    <div class="spinner"></div>
+                    <p style="margin-top:12px">Memuat menu...</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Add/Edit Modal ── -->
+  <div class="modal-overlay" id="menuModal" onclick="closeModalOnOverlay(event,'menuModal')">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title" id="menuModalTitle">Tambah Menu</div>
+        <button class="modal-close" onclick="closeModal('menuModal')">✕</button>
+      </div>
+      <input type="hidden" id="editMenuId">
+
+      <div class="form-group">
+        <label class="form-label">Nama Menu *</label>
+        <input type="text" class="form-control" id="menuName" placeholder="Contoh: Cappuccino">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">Kategori *</label>
+          <select class="form-control" id="menuCategory">
+            <option value="Coffee">☕ Coffee</option>
+            <option value="No Coffee">🥤 No Coffee</option>
+            <option value="Snack">🍩 Snack</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Harga (Rp) *</label>
+          <input type="number" class="form-control" id="menuPrice" placeholder="25000" min="0">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Deskripsi</label>
+        <input type="text" class="form-control" id="menuDesc" placeholder="Opsional">
+      </div>
+      <div class="form-group">
+        <label class="form-label">URL Gambar</label>
+        <input type="url" class="form-control" id="menuImageUrl" placeholder="https://... (opsional)">
+      </div>
+
+      <!-- Options Builder -->
+      <div class="options-builder">
+        <div class="options-builder-title">Opsi Pesanan <span
+            style="color:var(--text-3);font-weight:400;text-transform:none;letter-spacing:0">(opsional)</span></div>
+        <div id="optionGroups"></div>
+        <button class="add-group-btn" onclick="addOptionGroup()">+ Tambah Grup Opsi</button>
+      </div>
+
+      <div class="flex gap-8" style="margin-top:20px">
+        <button class="btn btn-ghost flex-1" onclick="closeModal('menuModal')">Batal</button>
+        <button class="btn btn-primary flex-1" onclick="saveMenu()">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Delete confirm ── -->
+  <div class="modal-overlay" id="deleteModal" onclick="closeModalOnOverlay(event,'deleteModal')">
+    <div class="modal" style="max-width:380px">
+      <div class="modal-header">
+        <div class="modal-title">Hapus Menu</div>
+        <button class="modal-close" onclick="closeModal('deleteModal')">✕</button>
+      </div>
+      <p style="color:var(--text-2);margin-bottom:20px;line-height:1.6">
+        Yakin ingin menghapus <strong id="deleteMenuName" style="color:var(--text)"></strong>?
+      </p>
+      <input type="hidden" id="deleteMenuId">
+      <div class="flex gap-8">
+        <button class="btn btn-ghost flex-1" onclick="closeModal('deleteModal')">Batal</button>
+        <button class="btn btn-danger flex-1" onclick="confirmDelete()">Hapus</button>
+      </div>
+    </div>
+  </div>
+
+  <?!= include('components/Scripts') ?>
+  <script>
+    var allMenus = [];
+    var currentCat = 'all';
+    var optionGroupCount = 0;
+
+    var CAT_EMOJI = { Coffee: '☕', 'No Coffee': '🥤', Snack: '🍩' };
+    function menuEmoji(cat) { return CAT_EMOJI[cat] || '🍽️'; }
+
+    window.addEventListener('load', function () { loadMenus(); });
+
+    function loadMenus() {
+      gasCall('apiGetMenus').then(function (menus) {
+        allMenus = menus;
+        renderAll(allMenus);
+      }).catch(function (e) {
+        console.error(e);
+        Toast.error('Gagal memuat menu');
+      });
+    }
+
+    function renderAll(menus) {
+      document.getElementById('menuCount').textContent = menus.length + ' menu';
+      renderCards(menus);
+      renderTable(menus);
+    }
+
+    /* ── Mobile cards ── */
+    function renderCards(menus) {
+      var el = document.getElementById('menuCards');
+      if (!menus.length) {
+        el.innerHTML = '<div class="empty-state"><span class="empty-icon">🍽️</span><p>Belum ada menu</p></div>';
+        return;
+      }
+      el.innerHTML = menus.map(function (m) {
+        var optChips = (m.options || []).map(function (o) {
+          return '<span class="opt-chip">' + o.name + '</span>';
+        }).join('');
+        return '<div class="menu-card-item">' +
+          '<div class="menu-card-icon">' + menuEmoji(m.category) + '</div>' +
+          '<div class="menu-card-info">' +
+          '<div class="menu-card-name">' + m.name + '</div>' +
+          '<div class="menu-card-meta">' + m.category + '</div>' +
+          '<div class="menu-card-price">' + formatIDR(m.price) + '</div>' +
+          (m.description ? '<div class="menu-card-desc">' + m.description + '</div>' : '') +
+          (optChips ? '<div class="menu-card-opts">' + optChips + '</div>' : '') +
+          '</div>' +
+          '<div class="menu-card-right">' +
+          '<span class="badge ' + (m.isAvailable ? 'badge-available' : 'badge-unavail') + '" ' +
+          'style="cursor:pointer" onclick="toggleAvail(\'' + m.id + '\')">' +
+          (m.isAvailable ? '✓ Tersedia' : '✕ Habis') +
+          '</span>' +
+          '<div class="flex gap-8">' +
+          '<button class="btn btn-ghost btn-sm" onclick="openEditModal(\'' + m.id + '\')">Edit</button>' +
+          '<button class="btn btn-danger btn-sm" onclick="openDeleteModal(\'' + m.id + '\',\'' + m.name.replace(/'/g, "\\'") + '\')">🗑</button>' +
+          '</div>' +
+          '</div>' +
+          '</div>';
+      }).join('');
+    }
+
+    /* ── Desktop table ── */
+    function renderTable(menus) {
+      var tbody = document.getElementById('menuTableBody');
+      if (!menus.length) {
+        tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><span class="empty-icon">🍽️</span><p>Belum ada menu</p></div></td></tr>';
+        return;
+      }
+      tbody.innerHTML = menus.map(function (m) {
+        var optText = (m.options || []).map(function (o) { return o.name; }).join(', ') || '—';
+        return '<tr>' +
+          '<td><div class="menu-item-name">' + menuEmoji(m.category) + ' ' + m.name + '</div>' +
+          (m.description ? '<div class="menu-item-desc">' + m.description + '</div>' : '') +
+          '</td>' +
+          '<td>' + m.category + '</td>' +
+          '<td style="color:var(--accent);font-weight:600">' + formatIDR(m.price) + '</td>' +
+          '<td style="font-size:12px;color:var(--text-2)">' + optText + '</td>' +
+          '<td><span class="badge ' + (m.isAvailable ? 'badge-available' : 'badge-unavail') + '" ' +
+          'style="cursor:pointer" onclick="toggleAvail(\'' + m.id + '\')">' +
+          (m.isAvailable ? '✓ Tersedia' : '✕ Habis') + '</span></td>' +
+          '<td><div class="actions-cell">' +
+          '<button class="btn btn-ghost btn-sm" onclick="openEditModal(\'' + m.id + '\')">Edit</button>' +
+          '<button class="btn btn-danger btn-sm" onclick="openDeleteModal(\'' + m.id + '\',\'' + m.name.replace(/'/g, "\\'") + '\')">🗑️</button>' +
+          '</div></td>' +
+          '</tr>';
+      }).join('');
+    }
+
+    /* ── Filter ── */
+    function filterByCategory(cat, el) {
+      currentCat = cat;
+      document.querySelectorAll('.filter-tab').forEach(function (t) { t.classList.remove('active'); });
+      el.classList.add('active');
+      filterSearch();
+    }
+    function filterSearch() {
+      var q = document.getElementById('searchInput').value.toLowerCase();
+      var filtered = currentCat === 'all' ? allMenus : allMenus.filter(function (m) { return m.category === currentCat; });
+      if (q) filtered = filtered.filter(function (m) {
+        return m.name.toLowerCase().includes(q) || (m.description || '').toLowerCase().includes(q);
+      });
+      renderAll(filtered);
+    }
+
+    /* ══════════════════════════════════════
+       OPTIONS BUILDER
+    ══════════════════════════════════════ */
+
+    function addOptionGroup(groupData) {
+      var container = document.getElementById('optionGroups');
+      var gid = 'og_' + (++optionGroupCount);
+      var name = groupData ? groupData.name : '';
+      var values = groupData ? groupData.values : [];
+      var prices = groupData ? (groupData.prices || {}) : {};
+      var defaultVal = groupData ? (groupData.default || '') : '';
+
+      var div = document.createElement('div');
+      div.className = 'option-group';
+      div.id = gid;
+      div.innerHTML =
+        '<button class="remove-group-btn" onclick="removeOptionGroup(\'' + gid + '\')">✕</button>' +
+        '<div class="option-group-header">' +
+        '<input type="text" class="form-control option-group-name" placeholder="Nama grup (contoh: Size)" value="' + name + '" style="flex:1">' +
+        '<input type="text" class="form-control option-group-default" placeholder="Default" value="' + defaultVal + '" style="width:110px">' +
+        '</div>' +
+        '<div class="option-values-row" id="vals_' + gid + '">' +
+        values.map(function (v) { return makeValueChip(gid, v, prices[v] || 0); }).join('') +
+        '</div>' +
+        '<div class="add-value-row">' +
+        '<input type="text" class="form-control" id="newval_' + gid + '" placeholder="Tambah pilihan..." onkeydown="handleValueKey(event,\'' + gid + '\')">' +
+        '<button class="btn btn-ghost btn-sm" onclick="addValue(\'' + gid + '\')">+ Tambah</button>' +
+        '</div>';
+      container.appendChild(div);
+    }
+
+    // CHANGED: chip sekarang punya label + price input + remove btn
+    function makeValueChip(gid, value, price) {
+      price = price || 0;
+      return '<div class="option-value-chip">' +
+        '<span class="option-value-label">' + value + '</span>' +
+        '<div class="option-value-price-wrap">' +
+        '<span class="option-value-price-prefix">+Rp</span>' +
+        '<input type="number" class="option-value-price-input" value="' + price + '" min="0" step="500" placeholder="0">' +
+        '</div>' +
+        '<button class="option-value-remove" onclick="removeValue(this)">✕</button>' +
+        '</div>';
+    }
+
+    function removeOptionGroup(gid) {
+      var el = document.getElementById(gid);
+      if (el) el.remove();
+    }
+
+    function handleValueKey(e, gid) {
+      if (e.key === 'Enter') { e.preventDefault(); addValue(gid); }
+    }
+
+    function addValue(gid) {
+      var input = document.getElementById('newval_' + gid);
+      var val = input.value.trim();
+      if (!val) return;
+      var container = document.getElementById('vals_' + gid);
+      var chip = document.createElement('div');
+      chip.innerHTML = makeValueChip(gid, val, 0);
+      container.appendChild(chip.firstChild);
+      input.value = '';
+      input.focus();
+    }
+
+    function removeValue(btn) { btn.parentElement.remove(); }
+
+    // CHANGED: collectOptions sekarang juga kumpulkan prices per value
+    function collectOptions() {
+      var groups = document.querySelectorAll('#optionGroups .option-group');
+      var result = [];
+      groups.forEach(function (g) {
+        var name = g.querySelector('.option-group-name').value.trim();
+        var defVal = g.querySelector('.option-group-default').value.trim();
+        var chips = g.querySelectorAll('.option-value-chip');
+        var values = [];
+        var prices = {};
+        chips.forEach(function (c) {
+          var label = c.querySelector('.option-value-label');
+          var priceInput = c.querySelector('.option-value-price-input');
+          if (!label) return;
+          var text = label.textContent.trim();
+          var price = priceInput ? Number(priceInput.value) || 0 : 0;
+          if (text) {
+            values.push(text);
+            prices[text] = price;
+          }
+        });
+        if (name && values.length) {
+          var group = { name: name, values: values, prices: prices };
+          if (defVal) group.default = defVal;
+          result.push(group);
+        }
+      });
+      return result;
+    }
+
+    // CHANGED: populateOptions pass prices ke addOptionGroup
+    function populateOptions(options) {
+      document.getElementById('optionGroups').innerHTML = '';
+      optionGroupCount = 0;
+      (options || []).forEach(function (g) { addOptionGroup(g); });
+    }
+
+    /* ── Add / Edit ── */
+    // Default option groups shown on every new menu
+    var DEFAULT_OPTIONS = [
+      {
+        name: 'Size',
+        values: ['Regular', 'Large'],
+        prices: { Regular: 0, Large: 4000 },
+        default: 'Regular',
+      }
+    ];
+
+    function openAddModal() {
+      document.getElementById('menuModalTitle').textContent = 'Tambah Menu';
+      document.getElementById('editMenuId').value = '';
+      document.getElementById('menuName').value = '';
+      document.getElementById('menuPrice').value = '';
+      document.getElementById('menuDesc').value = '';
+      document.getElementById('menuImageUrl').value = '';
+      document.getElementById('menuCategory').value = 'Coffee';
+      populateOptions(DEFAULT_OPTIONS);
+      openModal('menuModal');
+    }
+
+    function openEditModal(id) {
+      var m = allMenus.find(function (x) { return x.id === id; });
+      if (!m) return;
+      document.getElementById('menuModalTitle').textContent = 'Edit Menu';
+      document.getElementById('editMenuId').value = m.id;
+      document.getElementById('menuName').value = m.name;
+      document.getElementById('menuPrice').value = m.price;
+      document.getElementById('menuDesc').value = m.description || '';
+      document.getElementById('menuImageUrl').value = m.imageUrl || '';
+      document.getElementById('menuCategory').value = m.category;
+      populateOptions(m.options || []);
+      openModal('menuModal');
+    }
+
+    function saveMenu() {
+      var id = document.getElementById('editMenuId').value;
+      var name = document.getElementById('menuName').value.trim();
+      var price = Number(document.getElementById('menuPrice').value);
+      var category = document.getElementById('menuCategory').value;
+      var desc = document.getElementById('menuDesc').value.trim();
+      var imageUrl = document.getElementById('menuImageUrl').value.trim();
+      var options = collectOptions();
+
+      if (!name) return Toast.error('Nama menu harus diisi');
+      if (!price || price <= 0) return Toast.error('Harga harus lebih dari 0');
+
+      var data = { name: name, price: price, category: category, description: desc, imageUrl: imageUrl, options: options };
+      Loader.show();
+      var call = id
+        ? gasCall('apiUpdateMenu', id, JSON.stringify(data))
+        : gasCall('apiCreateMenu', JSON.stringify(data));
+
+      call.then(function (res) {
+        Loader.hide();
+        if (res.success) {
+          Toast.success(id ? 'Menu diperbarui' : 'Menu ditambahkan');
+          closeModal('menuModal');
+          loadMenus();
+        } else Toast.error(res.error || 'Gagal menyimpan');
+      }).catch(function () { Loader.hide(); Toast.error('Terjadi kesalahan'); });
+    }
+
+    function toggleAvail(id) {
+      gasCall('apiToggleMenuAvailability', id).then(function (res) {
+        if (res.success) loadMenus();
+        else Toast.error('Gagal mengubah status');
+      });
+    }
+
+    function openDeleteModal(id, name) {
+      document.getElementById('deleteMenuId').value = id;
+      document.getElementById('deleteMenuName').textContent = name;
+      openModal('deleteModal');
+    }
+
+    function confirmDelete() {
+      var id = document.getElementById('deleteMenuId').value;
+      Loader.show();
+      gasCall('apiDeleteMenu', id).then(function (res) {
+        Loader.hide();
+        if (res.success) { Toast.success('Menu dihapus'); closeModal('deleteModal'); loadMenus(); }
+        else Toast.error('Gagal menghapus menu');
+      }).catch(function () { Loader.hide(); Toast.error('Terjadi kesalahan'); });
+    }
+  </script>
+</body>
+
+</html>
